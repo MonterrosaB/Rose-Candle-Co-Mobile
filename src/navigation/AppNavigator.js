@@ -1,13 +1,14 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 
 // Importa tus pantallas
 import Home from "../screens/Home/Home.js";
 import Materials from "../screens/Materials/Materials.js";
 import Sales from "../screens/Sales/Sales.js";
+import MaterialsDetails from "../screens/Materials/MaterialsDetails.js";
 
 
 //Icons
@@ -16,6 +17,18 @@ import { Octicons } from "@expo/vector-icons";     // Materials
 import { MaterialIcons } from "@expo/vector-icons"; // Sales
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+
+// Stack para Materials
+function MaterialsStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Materials" component={Materials} />
+      <Stack.Screen name="MaterialsDetails" component={MaterialsDetails} />
+    </Stack.Navigator>
+  );
+}
 
 export default function AppNavigator() {
   return (
@@ -23,26 +36,25 @@ export default function AppNavigator() {
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
-          tabBarShowLabel: false, // Oculta texto por defecto
+          tabBarShowLabel: false,
           tabBarStyle: {
             height: 70,
-            marginTop:1,
-            borderTopColor: "black", // Color negro
+            marginTop: 1,
+            borderTopColor: "black",
             backgroundColor: "#F9F7F3",
             borderTopWidth: 2,
+            paddingTop: 5,
             elevation: 10,
             marginLeft: -5,
-
           },
           tabBarIcon: ({ focused }) => {
             let IconComponent;
             let iconName;
 
-            // Asignar icono según la ruta
             if (route.name === "Home") {
               IconComponent = Feather;
               iconName = "home";
-            } else if (route.name === "Materials") {
+            } else if (route.name === "MaterialsStack") {
               IconComponent = Octicons;
               iconName = "checklist";
             } else if (route.name === "Sales") {
@@ -50,36 +62,34 @@ export default function AppNavigator() {
               iconName = "local-offer";
             }
 
-            // Si está activo, mostrar icono + texto en fondo café
             if (focused) {
               return (
                 <View
                   style={{
                     flexDirection: "row",
-                    backgroundColor: "#A78A5E", // Café
+                    backgroundColor: "#A78A5E",
                     paddingHorizontal: 11,
                     paddingVertical: 1,
                     borderRadius: 15,
                     width: 100,
-                    height:35,
+                    height: 35,
                     alignItems: "center",
                   }}
                 >
-                  <IconComponent name={iconName} size={22} color="white"/>
+                  <IconComponent name={iconName} size={22} color="white" />
                   <Text style={{ color: "white", marginLeft: 6 }}>
-                    {route.name}
+                    {route.name === "MaterialsStack" ? "Materials" : route.name}
                   </Text>
                 </View>
               );
             }
 
-            // Si no está activo, solo icono gris
             return <IconComponent name={iconName} size={22} color="black" />;
           },
         })}
       >
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Materials" component={Materials} />
+        <Tab.Screen name="MaterialsStack" component={MaterialsStack} />
         <Tab.Screen name="Sales" component={Sales} />
       </Tab.Navigator>
     </NavigationContainer>

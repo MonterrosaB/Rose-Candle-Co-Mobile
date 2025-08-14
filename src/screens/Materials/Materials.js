@@ -1,44 +1,112 @@
-// src/screens/Materials.js
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
-import { MaterialIcons, Feather } from "@expo/vector-icons";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Materials() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const getMaterials = async () => {
-    try {
-      const res = await fetch("https://rose-candle-co.onrender.com/api/rawMaterials");
-      const data = await res.json();
-      setMaterials(data);
-    } catch (error) {
-      console.error("Error fetching materials:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const navigation = useNavigation();
 
   useEffect(() => {
-    getMaterials();
+    const fetchMaterials = async () => {
+      try {
+        const res = await fetch(
+          "https://rose-candle-co.onrender.com/api/rawMaterials"
+        );
+        const data = await res.json();
+        setMaterials(data);
+      } catch (err) {
+        console.error("Error fetching materials:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMaterials();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.name}</Text>
-      <View style={styles.rightCell}>
-        <Text style={[styles.quantity, { marginEnd: 10 }]}>{item.currentStock} { item.unit}</Text>
-        <TouchableOpacity>
-          <Feather name="arrow-right" size={18} color="#a0522d" />
+  const totalPages = Math.ceil(materials.length / itemsPerPage);
+  const paginatedData = materials.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+const renderItem = ({ item, index }) => (
+  <View
+    style={[
+      styles.row,
+      { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" } // alterna colores
+    ]}
+  >
+    <Text style={styles.cell}>{item.name}</Text>
+    <View style={styles.rightCell}>
+      <Text style={[styles.quantity, { marginEnd: 30 }]}>
+        {item.currentStock} {item.unit}
+      </Text>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("MaterialsDetails", { material: item })
+        }
+      >
+        <Feather name="arrow-right" size={18} color="#a0522d" />
+      </TouchableOpacity>
+    </View>
+  </View>
+);
+
+  const renderPagination = () => (
+    <View style={styles.pagination}>
+      <TouchableOpacity
+        disabled={currentPage === 1}
+        onPress={() => setCurrentPage((prev) => prev - 1)}
+      >
+        <Text style={[styles.pageBtn, currentPage === 1 && styles.disabled]}>
+          Anterior
+        </Text>
+      </TouchableOpacity>
+
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        <TouchableOpacity key={page} onPress={() => setCurrentPage(page)}>
+          <Text
+            style={[
+              styles.pageNumber,
+              page === currentPage && styles.activePage,
+            ]}
+          >
+            {page}
+          </Text>
         </TouchableOpacity>
-      </View>
+      ))}
+
+      <TouchableOpacity
+        disabled={currentPage === totalPages}
+        onPress={() => setCurrentPage((prev) => prev + 1)}
+      >
+        <Text
+          style={[
+            styles.pageBtn,
+            currentPage === totalPages && styles.disabled,
+          ]}
+        >
+          Siguiente
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#a0522d" />
+        <ActivityIndicator size="large" color="#A78A5E" />
       </View>
     );
   }
@@ -46,21 +114,22 @@ export default function Materials() {
   return (
     <View style={styles.container}>
       <View style={styles.headerBox}>
-        <Text style={styles.header}>Materiales</Text>
+        <Text style={styles.header}>Materia Prima</Text>
         <MaterialIcons name="filter-list" size={24} color="#333" />
       </View>
 
       <View style={styles.table}>
         <View style={styles.tableHeader}>
           <Text style={styles.headerText}>Materia</Text>
-          <Text style={[styles.headerText, { marginEnd: 20 }]}>Cantidad</Text>
+          <Text style={[styles.headerText, { marginEnd: 40 }]}>Cantidad</Text>
         </View>
 
         <FlatList
-          data={materials}
+          data={paginatedData}
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
+          ListFooterComponent={renderPagination}
         />
       </View>
     </View>
@@ -68,63 +137,58 @@ export default function Materials() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#fff",
-  },
+  container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
   headerBox: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
+    marginTop: 60,
   },
-  header: {
-    marginTop:60,
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 30
-  },
+  header: { fontSize: 20, fontWeight: "bold", color: "#333" },
   table: {
     backgroundColor: "#fff",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ddd",
-    padding: 8,
+    overflow: "hidden",
   },
   tableHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
   },
-  headerText: {
-    fontWeight: "bold",
-    fontSize: 14,
-  },
+  headerText: { fontWeight: "bold", fontSize: 14, color: "#333" },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#f2f2f2",
   },
-  cell: {
-    flex: 1,
-    fontSize: 14,
-  },
-  rightCell: {
+  cell: { flex: 1, fontSize: 14, color: "#333" },
+  rightCell: { flexDirection: "row", alignItems: "center", gap: 8 },
+  quantity: { fontSize: 14, marginRight: 10, color: "#555" },
+  loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  pagination: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  quantity: {
-    fontSize: 14,
-    marginRight: 8,
-  },
-  loader: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 12,
+    backgroundColor: "#fff",
   },
+  pageBtn: { fontSize: 14, paddingHorizontal: 8, color: "#333" },
+  pageNumber: { fontSize: 14, paddingHorizontal: 8, color: "#333" },
+  activePage: {
+    fontWeight: "bold",
+    backgroundColor: "#A78A5E",
+    color: "#fff",
+    borderRadius: 5,
+    paddingHorizontal: 6,
+  },
+  disabled: { color: "#ccc" },
 });
