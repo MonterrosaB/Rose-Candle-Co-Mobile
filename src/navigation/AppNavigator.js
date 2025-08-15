@@ -1,3 +1,4 @@
+// AppNavigator.js
 import React from "react";
 import { View, Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -9,21 +10,31 @@ import Home from "../screens/Home/Home.js";
 import Materials from "../screens/Materials/Materials.js";
 import Sales from "../screens/Sales/Sales.js";
 import MaterialsDetails from "../screens/Materials/MaterialsDetails.js";
+import Stock from "../screens/Stock/Stock.js";
 
-
-//Icons
+// Icons
 import { Feather } from "@expo/vector-icons";      // Home
 import { Octicons } from "@expo/vector-icons";     // Materials
-import { MaterialIcons } from "@expo/vector-icons"; // Sales
+import { MaterialIcons } from "@expo/vector-icons"; // Sales, Stock
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
-
 
 // Stack para Materials
 function MaterialsStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Materials" component={Materials} />
+      <Stack.Screen name="MaterialsDetails" component={MaterialsDetails} />
+    </Stack.Navigator>
+  );
+}
+
+// Stack para Stock (incluye también Materials)
+function StockStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="StockHome" component={Stock} />
       <Stack.Screen name="Materials" component={Materials} />
       <Stack.Screen name="MaterialsDetails" component={MaterialsDetails} />
     </Stack.Navigator>
@@ -60,6 +71,9 @@ export default function AppNavigator() {
             } else if (route.name === "Sales") {
               IconComponent = MaterialIcons;
               iconName = "local-offer";
+            } else if (route.name === "StockStack") {
+              IconComponent = MaterialIcons;
+              iconName = "inventory";
             }
 
             if (focused) {
@@ -78,7 +92,11 @@ export default function AppNavigator() {
                 >
                   <IconComponent name={iconName} size={22} color="white" />
                   <Text style={{ color: "white", marginLeft: 6 }}>
-                    {route.name === "MaterialsStack" ? "Materials" : route.name}
+                    {route.name === "MaterialsStack"
+                      ? "Materials"
+                      : route.name === "StockStack"
+                      ? "Stock"
+                      : route.name}
                   </Text>
                 </View>
               );
@@ -91,6 +109,7 @@ export default function AppNavigator() {
         <Tab.Screen name="Home" component={Home} />
         <Tab.Screen name="MaterialsStack" component={MaterialsStack} />
         <Tab.Screen name="Sales" component={Sales} />
+        <Tab.Screen name="StockStack" component={StockStack} />
       </Tab.Navigator>
     </NavigationContainer>
   );
