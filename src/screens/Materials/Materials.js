@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -14,25 +15,35 @@ export default function Materials() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 13;
   const navigation = useNavigation();
 
+  const fetchMaterials = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        "https://rose-candle-co.onrender.com/api/rawMaterials"
+      );
+      const data = await res.json();
+      setMaterials(data);
+    } catch (err) {
+      console.error("Error fetching materials:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar al montar
   useEffect(() => {
-    const fetchMaterials = async () => {
-      try {
-        const res = await fetch(
-          "https://rose-candle-co.onrender.com/api/rawMaterials"
-        );
-        const data = await res.json();
-        setMaterials(data);
-      } catch (err) {
-        console.error("Error fetching materials:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMaterials();
   }, []);
+
+  // Recargar al volver a la pantalla
+  useFocusEffect(
+    useCallback(() => {
+      fetchMaterials();
+    }, [])
+  );
 
   const totalPages = Math.ceil(materials.length / itemsPerPage);
   const paginatedData = materials.slice(
@@ -40,28 +51,28 @@ export default function Materials() {
     currentPage * itemsPerPage
   );
 
-const renderItem = ({ item, index }) => (
-  <View
-    style={[
-      styles.row,
-      { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" } // alterna colores
-    ]}
-  >
-    <Text style={styles.cell}>{item.name}</Text>
-    <View style={styles.rightCell}>
-      <Text style={[styles.quantity, { marginEnd: 30 }]}>
-        {item.currentStock} {item.unit}
-      </Text>
-      <TouchableOpacity
-        onPress={() =>
-          navigation.navigate("MaterialsDetails", { material: item })
-        }
-      >
-        <Feather name="arrow-right" size={18} color="#a0522d" />
-      </TouchableOpacity>
+  const renderItem = ({ item, index }) => (
+    <View
+      style={[
+        styles.row,
+        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" }, // alterna colores
+      ]}
+    >
+      <Text style={styles.cell}>{item.name}</Text>
+      <View style={styles.rightCell}>
+        <Text style={[styles.quantity, { marginEnd: 30 }]}>
+          {item.currentStock} {item.unit}
+        </Text>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("MaterialsDetails", { material: item })
+          }
+        >
+          <Feather name="arrow-right" size={18} color="#a0522d" />
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
 
   const renderPagination = () => (
     <View style={styles.pagination}>
@@ -129,8 +140,9 @@ const renderItem = ({ item, index }) => (
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={renderPagination}
         />
+
+        <View style={styles.paginationWrapper}>{renderPagination()}</View>
       </View>
     </View>
   );
@@ -144,13 +156,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 60,
   },
-  header: { fontSize: 20, fontWeight: "bold", color: "#333" },
+  paginationWrapper: {
+    marginTop: 10, // espacio desde la tabla
+    marginBottom: 20, // espacio hacia el nav
+  },
+  header: { fontSize: 20, fontWeight: "bold", color: "#333", marginLeft: 10 },
   table: {
     backgroundColor: "#fff",
+    height: 750,
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#ddd",
     overflow: "hidden",
+    marginLeft: 5,
+    marginRight: 5,
   },
   tableHeader: {
     flexDirection: "row",

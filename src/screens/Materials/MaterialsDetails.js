@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 export default function MaterialsDetails({ route, navigation }) {
   const { material } = route.params;
@@ -8,13 +19,17 @@ export default function MaterialsDetails({ route, navigation }) {
   // Estados para el formulario
   const [name, setName] = useState(material.name);
   const [unit, setUnit] = useState(material.unit);
-  const [currentStock, setCurrentStock] = useState(String(material.currentStock));
-  const [currentPrice, setCurrentPrice] = useState(String(material.purchasePrice));
-  const [category, setCategory] = useState(material.category?._id || "");
-  const [supplier, setSupplier] = useState(material.supplier?._id || "");
-  const [minStock, setMinStock] = useState(String(material.minStock));
+  const [currentStock, setCurrentStock] = useState(
+    String(material.currentStock)
+  );
+  const [currentPrice, setCurrentPrice] = useState(
+    String(material.currentPrice)
+  );
+  const [category, setCategory] = useState(material.idRawMaterialCategory?._id || "");
+  const [supplier, setSupplier] = useState(material.idSupplier?._id || "");
+  const navigationBack = useNavigation();
 
-    const unidades = [
+  const unidades = [
     { label: "Kilogramo", value: "kg" },
     { label: "Gramo", value: "g" },
     { label: "Litro", value: "l" },
@@ -32,12 +47,16 @@ export default function MaterialsDetails({ route, navigation }) {
     const fetchData = async () => {
       try {
         // Fetch de categorías
-        const catRes = await fetch("https://rose-candle-co.onrender.com/api/rawMaterialCategories"); // <--- PON TU API AQUÍ
+        const catRes = await fetch(
+          "https://rose-candle-co.onrender.com/api/rawMaterialCategories"
+        );
         const catData = await catRes.json();
         setCategorias(catData);
 
         // Fetch de proveedores
-        const provRes = await fetch("https://rose-candle-co.onrender.com/api/suppliers"); // <--- PON TU API AQUÍ
+        const provRes = await fetch(
+          "https://rose-candle-co.onrender.com/api/suppliers"
+        ); 
         const provData = await provRes.json();
         setProveedores(provData);
         setLoading(false);
@@ -51,29 +70,35 @@ export default function MaterialsDetails({ route, navigation }) {
   }, []);
 
   const handleSave = async () => {
-    try {
-      const res = await fetch(`https://rose-candle-co.onrender.com/api/rawMaterials/${material._id}`, { // <--- PON TU API AQUÍ
+  try {
+    const updatedFields = {
+      name: name || material.name,
+      unit: unit || material.unit,
+      currentStock: Number(currentStock ?? material.currentStock),
+      currentPrice: Number(currentPrice ?? material.currentPrice),
+      idRawMaterialCategory: category || material.idRawMaterialCategory?._id,
+      idSupplier: supplier || material.idSupplier?._id,
+    };
+
+    const res = await fetch(
+      `https://rose-candle-co.onrender.com/api/rawMaterials/${material._id}`,
+      {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          unit,
-          currentStock: Number(currentStock),
-          purchasePrice: Number(currentPrice),
-          category,
-          supplier,
-          minStock: Number(minStock),
-        }),
-      });
+        body: JSON.stringify(updatedFields),
+      }
+    );
 
-      if (!res.ok) throw new Error("Error al guardar");
+    if (!res.ok) throw new Error("Error al guardar");
 
-      Alert.alert("Guardado", "Los cambios han sido guardados.");
-      navigation.goBack();
-    } catch (error) {
-      Alert.alert("Error", error.message);
-    }
-  };
+    Alert.alert("Guardado", "Los cambios han sido guardados.");
+    navigation.goBack();
+  } catch (error) {
+    Alert.alert("Error", error.message);
+  }
+};
+
+
 
   const handleDelete = async () => {
     Alert.alert("Eliminar", "¿Seguro que deseas eliminar este material?", [
@@ -83,9 +108,12 @@ export default function MaterialsDetails({ route, navigation }) {
         style: "destructive",
         onPress: async () => {
           try {
-            const res = await fetch(`https://rose-candle-co.onrender.com/api/rawMaterials/${material._id}`, { 
-              method: "DELETE",
-            });
+            const res = await fetch(
+              `https://rose-candle-co.onrender.com/api/rawMaterials/${material._id}`,
+              {
+                method: "DELETE",
+              }
+            );
 
             if (!res.ok) throw new Error("Error al eliminar");
 
@@ -112,6 +140,14 @@ export default function MaterialsDetails({ route, navigation }) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Editar Materia Prima</Text>
 
+      <TouchableOpacity
+        onPress={() =>
+          navigationBack.navigate("Materials")
+        }
+      >
+        <Feather name="arrow-left" size={30} color="#a0522d" marginBottom={20} />
+      </TouchableOpacity>
+
       {/* Nombre */}
       <Text style={styles.label}>Nombre</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} />
@@ -121,7 +157,11 @@ export default function MaterialsDetails({ route, navigation }) {
       <View style={styles.pickerContainer}>
         <Picker selectedValue={category} onValueChange={setCategory}>
           {categorias.map((cat, index) => (
-            <Picker.Item key={cat._id || index} label={cat.name} value={cat._id} />
+            <Picker.Item
+              key={cat._id || index}
+              label={cat.name}
+              value={cat._id}
+            />
           ))}
         </Picker>
       </View>
@@ -131,7 +171,11 @@ export default function MaterialsDetails({ route, navigation }) {
       <View style={styles.pickerContainer}>
         <Picker selectedValue={unit} onValueChange={setUnit}>
           {unidades.map((u, index) => (
-            <Picker.Item key={u.value || index} label={u.label} value={u.value} />
+            <Picker.Item
+              key={u.value || index}
+              label={u.label}
+              value={u.value}
+            />
           ))}
         </Picker>
       </View>
@@ -141,7 +185,11 @@ export default function MaterialsDetails({ route, navigation }) {
       <View style={styles.pickerContainer}>
         <Picker selectedValue={supplier} onValueChange={setSupplier}>
           {proveedores.map((sup, index) => (
-            <Picker.Item key={sup._id || index} label={sup.name} value={sup._id} />
+            <Picker.Item
+              key={sup._id || index}
+              label={sup.name}
+              value={sup._id}
+            />
           ))}
         </Picker>
       </View>
@@ -166,10 +214,16 @@ export default function MaterialsDetails({ route, navigation }) {
 
       {/* Botones */}
       <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
+        <TouchableOpacity
+          style={[styles.button, styles.saveButton]}
+          onPress={handleSave}
+        >
           <Text style={styles.buttonText}>Guardar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
+        <TouchableOpacity
+          style={[styles.button, styles.deleteButton]}
+          onPress={handleDelete}
+        >
           <Text style={styles.buttonText1}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -178,8 +232,8 @@ export default function MaterialsDetails({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: "#fff" },
-  header: { fontSize: 20, fontWeight: "bold", marginBottom: 20 },
+  container: { padding: 20, backgroundColor: "#fff", marginTop: 0 },
+  header: { fontSize: 20, fontWeight: "bold", marginBottom: 20, marginTop: 40 },
   label: { fontSize: 14, marginBottom: 5, fontWeight: "600" },
   input: {
     borderWidth: 1,
@@ -207,9 +261,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   saveButton: { backgroundColor: "#7D7954" },
-  deleteButton: { backgroundColor: "#F2EBD9"},
+  deleteButton: { backgroundColor: "#F2EBD9" },
   buttonText: { color: "#fff", fontWeight: "bold" },
-    buttonText1: { color: "#7D7954", fontWeight: "bold" },
+  buttonText1: { color: "#7D7954", fontWeight: "bold" },
 
   loadingContainer: {
     flex: 1,
