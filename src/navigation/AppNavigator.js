@@ -12,7 +12,7 @@ import Sales from "../screens/Sales/Sales.js";
 import MaterialsDetails from "../screens/Materials/MaterialsDetails.js";
 import Stock from "../screens/Stock/Stock.js";
 import PhoneLogin from "../screens/Login/Login.js";
-import CodeVerificationScreen from "../screens/Login/CodeVerification.js";
+import CodeVerification from "../screens/Login/CodeVerification.js";
 
 // Icons
 import { Feather } from "@expo/vector-icons"; // Home
@@ -122,8 +122,8 @@ function LoginStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
       <Stack.Screen
-        name="CodeVerificationScreen"
-        component={CodeVerificationScreen}
+        name="CodeVerification"
+        component={CodeVerification}
       />
     </Stack.Navigator>
   );
@@ -134,9 +134,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Flujo de Login primero */}
         <Stack.Screen name="LoginStack" component={LoginStack} />
-        {/* Tabs principales después de login */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -11,15 +11,32 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import loginPic from "../../../assets/login.png";
+import {auth, RecaptchaVerifier, signInWithPhoneNumber} from "../.././firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
+
+
 
 export default function PhoneLogin() {
   const [phone, setPhone] = useState("");
   const navigation = useNavigation();
+  const recaptchaVerifier = useRef(null);
 
-  const handleContinue = () => {
-    if (!phone) return alert("Ingrese un número de teléfono válido");
-    // Aquí podrías hacer una llamada a tu API para enviar el código
-    navigation.navigate("CodeVerification", { phone });
+  const handleContinue = async () => {
+    if (!phone.startsWith("+")) {
+      alert("Incluye el código de país, ej: +50377778888");
+      return;
+    }
+
+    try {
+      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+
+      const confirmation = await signInWithPhoneNumber(auth, phone, verifier);
+      navigation.navigate("CodeVerification", { confirmation });
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   // Obtener ancho de la pantalla
@@ -27,29 +44,35 @@ export default function PhoneLogin() {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={loginPic}
-        style={{ width, height: 370, resizeMode: "cover" }}
-      />
+    {/* Recaptcha */}
+    <FirebaseRecaptchaVerifierModal
+      ref={recaptchaVerifier}
+      firebaseConfig={firebaseConfig}
+    />
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Iniciar Sesión</Text>
-        <Text style={styles.label}>Número de teléfono</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="1234-5678"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
-        />
-        <Text style={styles.info}>
-          Recibirás un mensaje SMS con un código de verificación.
-        </Text>
-        <TouchableOpacity style={styles.button} onPress={handleContinue}>
-          <Text style={styles.buttonText}>Continuar</Text>
-        </TouchableOpacity>
-      </View>
+    <Image
+      source={loginPic}
+      style={{ width, height: 370, resizeMode: "cover" }}
+    />
+
+    <View style={styles.content}>
+      <Text style={styles.title}>Iniciar Sesión</Text>
+      <Text style={styles.label}>Número de teléfono</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="+50377778888"
+        keyboardType="phone-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+      <Text style={styles.info}>
+        Recibirás un mensaje SMS con un código de verificación.
+      </Text>
+      <TouchableOpacity style={styles.button} onPress={handleContinue}>
+        <Text style={styles.buttonText}>Continuar</Text>
+      </TouchableOpacity>
     </View>
+  </View>
   );
 }
 
@@ -57,7 +80,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9F7F3", padding: 0 },
   content: {
     alignItems: "center",
-    marginTop: 60, // espacio debajo de la imagen
+    marginTop: 60,
   },
   title: { fontSize: 40, 
     fontFamily: "Lora",
