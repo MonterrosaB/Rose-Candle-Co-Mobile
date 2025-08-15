@@ -140,9 +140,10 @@ export default function Materials() {
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
           showsVerticalScrollIndicator={false}
+          ListFooterComponent={
+            <View style={styles.paginationWrapper}>{renderPagination()}</View>
+          }
         />
-
-        <View style={styles.paginationWrapper}>{renderPagination()}</View>
       </View>
     </View>
   );
