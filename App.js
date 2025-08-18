@@ -1,8 +1,11 @@
-import React from 'react';
+import React from "react";
 import AppNavigator from "./src/navigation/AppNavigator";
-
+import {AuthProvider} from "./src/screens/Login/AuthContext";
 
 export default function App() {
-  return <AppNavigator />;
-
+  return(
+  <AuthProvider>
+    <AppNavigator />
+  </AuthProvider>
+  );
 }

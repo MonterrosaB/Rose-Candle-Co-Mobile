@@ -11,21 +11,23 @@ import {
 } from "react-native";
 import loginPic from "../../../assets/login.png";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "./AuthContext";
 
 
 export default function CodeVerification({ route }) {
+  const { confirmation } = useAuth();
   const navigation = useNavigation();
-  const { confirmation } = route.params;
   const [code, setCode] = useState("");
 
   const confirmCode = async () => {
-    try {
-      await confirmation.confirm(code);
+     try {
+      await confirmation.confirm(code); // verifica el código
       navigation.reset({
         index: 0,
-        routes: [{ name: "MainTabs" }],
+        routes: [{ name: "MainTabs" }], // ✅ te manda cabal a MainTabs
       });
     } catch (error) {
+      console.log(error);
       alert("Código incorrecto o expirado");
     }
   };
