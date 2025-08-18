@@ -11,15 +11,15 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import loginPic from "../../../assets/login.png";
-import {auth, RecaptchaVerifier, signInWithPhoneNumber} from "../.././firebaseConfig";
-import { useNavigation } from "@react-navigation/native";
-
+import auth from "@react-native-firebase/auth";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { firebaseConfig } from "../../firebaseConfig"; // ajusta ruta
 
 
 export default function PhoneLogin() {
   const [phone, setPhone] = useState("");
+  const recaptchaVerifier = useRef(null); // 🔹 ref necesario
   const navigation = useNavigation();
-  const recaptchaVerifier = useRef(null);
 
   const handleContinue = async () => {
     if (!phone.startsWith("+")) {
@@ -28,20 +28,16 @@ export default function PhoneLogin() {
     }
 
     try {
-      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
-
-      const confirmation = await signInWithPhoneNumber(auth, phone, verifier);
+      const confirmation = await auth().signInWithPhoneNumber(
+        phone,
+        recaptchaVerifier.current);
       navigation.navigate("CodeVerification", { confirmation });
     } catch (error) {
       alert(error.message);
     }
   };
-
   // Obtener ancho de la pantalla
   const { width } = Dimensions.get("window");
-
   return (
     <View style={styles.container}>
     {/* Recaptcha */}

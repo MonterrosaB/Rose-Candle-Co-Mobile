@@ -1,6 +1,6 @@
 // firebaseConfig.js
-import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { firebase } from "@react-native-firebase/app";
+import auth from "@react-native-firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBN4FW2kAQQ12ZUqhMGWCoGF8BRKAVmIso",
@@ -11,6 +11,9 @@ const firebaseConfig = {
   appId: "1:734925717212:android:8eff74b301072efe963e19",
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export {auth, RecaptchaVerifier, signInWithPhoneNumber };
+// Inicializa Firebase (solo si no está inicializado)
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export { firebaseConfig, auth };
