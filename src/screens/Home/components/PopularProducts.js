@@ -1,40 +1,50 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { PieChart } from "react-native-svg-charts"; // Verifica que esté correctamente instalado
+import { View, Text, Dimensions } from "react-native";
+import { PieChart } from "react-native-chart-kit";
 
-const PopularProducts = ({ data = [] }) => { // valor por defecto
+const COLORS = ["#E8DCC3", "#C2A878", "#A3A380"];
+const screenWidth = Dimensions.get("window").width;
+
+const PopularProducts = ({ data = [] }) => {
   const pieData = data.map((item, index) => ({
-    value: item.totalQuantity,
-    svg: { fill: ["#E8DCC3", "#C2A878", "#A3A380"][index % 3] },
-    key: `pie-${index}`
+    name: item.productName?.length > 0 ? item.productName : `Item ${index + 1}`,
+    population: item.totalQuantity,
+    color: COLORS[index % COLORS.length],
+    legendFontColor: "#333",
+    legendFontSize: 12
   }));
 
   return (
-    <View style={{
-      padding: 20,
-      borderRadius: 20,
-      backgroundColor: "#fff",
-      shadowColor: "#000",
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      marginBottom: 20
-    }}>
-      <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 10 }}>Productos Populares</Text>
+    <View
+      style={{
+        padding: 20,
+        borderRadius: 20,
+        backgroundColor: "#fff",
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        marginBottom: 20
+      }}
+    >
+      <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 10 }}>
+        Productos Populares
+      </Text>
 
-      {data.length > 0 && <PieChart style={{ height: 150 }} data={pieData} />}
-
-      {data.map((item, index) => (
-        <View key={item._id} style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          <View style={{
-            width: 12,
-            height: 12,
-            backgroundColor: ["#E8DCC3", "#C2A878", "#A3A380"][index % 3],
-            marginRight: 10,
-            borderRadius: 6
-          }} />
-          <Text>{item.productName?.length > 10 ? item.productName.slice(0, 10) + "..." : item.productName}</Text>
-        </View>
-      ))}
+      {data.length > 0 && (
+        <PieChart
+          data={pieData}
+          width={screenWidth - 60}
+          height={150}
+          chartConfig={{
+            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
+          }}
+          accessor={"population"}
+          backgroundColor={"transparent"}
+          paddingLeft={"10"}
+          center={[0, 0]}
+          absolute
+        />
+      )}
     </View>
   );
 };

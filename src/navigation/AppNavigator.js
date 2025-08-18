@@ -9,7 +9,7 @@ import { NavigationContainer } from "@react-navigation/native";
 // ----------------------------------------------------
 import Home from "../screens/Home/Home.js";
 import Materials from "../screens/Materials/Materials.js";
-import Sales from "../screens/Sales/Sales.js";
+// import Sales from "../screens/Sales/Sales.js"; // <<< QUITADO DE LA BARRA
 import MaterialsDetails from "../screens/Materials/MaterialsDetails.js";
 import Stock from "../screens/Stock/Stock.js";
 
@@ -40,12 +40,27 @@ import CollectionsDetails from "../screens/Collections/CollectionsDetail.js";
 import Products from "../screens/Products/Products.js";
 import ProductDetail from "../screens/Products/ProductDetail.js";
 
+// ----------------------------------------------------
+// Employees (lista y detalle) NUEVOS
+// ----------------------------------------------------
+import Employees from "../screens/Employees/Employees.js"; 
+// Si hay un detalle futuro, se agrega así:
+import EmployeesDetail from "../screens/Employees/EmployeesDetail.js";
+
+// ----------------------------------------------------
+// Record (nueva pantalla dentro de Stock)
+// ----------------------------------------------------
+import Record from "../screens/Record/Record.js";
+
 // Login (comentado)
 // import PhoneLogin from "../screens/Login/Login.js";
 // import CodeVerification from "../screens/Login/CodeVerification.js";
 
 // Splash
 import SplashScreen from "../screens/Splash/SplashScreen.js";
+
+// >>> NUEVO: Importa la pantalla estática personalizada
+import WelcomeScreen from "../screens/WelcomeScreen/WelcomeScreen.js";
 
 // Icons
 import { Feather } from "@expo/vector-icons";
@@ -96,6 +111,24 @@ function StockStack() {
       {/* Products (lista y detalle) dentro de Stock */}
       <Stack.Screen name="Products" component={Products} />
       <Stack.Screen name="ProductDetail" component={ProductDetail} />
+
+      {/* Record (NUEVA pantalla dentro de Stock) */}
+      <Stack.Screen name="Record" component={Record} />
+    </Stack.Navigator>
+  );
+}
+
+// ----------------------------------------------------
+// STACK INTERNOS PARA "EMPLOYEES" (contiene pantallas relacionadas)
+// ----------------------------------------------------
+function EmployeesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* Pantalla principal del módulo Employees */}
+      <Stack.Screen name="EmployeesHome" component={Employees} />
+
+      {/* Detalle de Employee */}
+      <Stack.Screen name="EmployeesDetail" component={EmployeesDetail} />
     </Stack.Navigator>
   );
 }
@@ -205,10 +238,10 @@ function MainTabs() {
             IconComponent = Feather;
             iconName = "home";
             textLabel = "Home";
-          } else if (route.name === "Sales") {
+          } else if (route.name === "EmployeesStack") {
             IconComponent = MaterialIcons;
-            iconName = "local-offer";
-            textLabel = "Sales";
+            iconName = "people";
+            textLabel = "Employees";
           } else if (route.name === "StockStack") {
             IconComponent = MaterialIcons;
             iconName = "inventory";
@@ -226,7 +259,8 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Sales" component={Sales} />
+      {/* Sales eliminado de la barra */}
+      <Tab.Screen name="EmployeesStack" component={EmployeesStack} />
       <Tab.Screen name="StockStack" component={StockStack} />
     </Tab.Navigator>
   );
@@ -239,6 +273,9 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
+
+        {/* Primero Welcome */}
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
         {/* Splash inicial */}
         <Stack.Screen name="Splash" component={SplashScreen} />
 

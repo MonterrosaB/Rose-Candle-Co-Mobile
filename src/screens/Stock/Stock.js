@@ -17,7 +17,7 @@ const Stock = ({ navigation }) => {
 
   const menuItems = [
     { title: "Productos", screen: "Products", icon: "cube-outline", iconType: "Ionicons", colors: ["#BCA88E", "#A78A5E", "#7D7954"], delay: 100 },
-    { title: "Historial", screen: "Record", icon: "history", iconType: "MaterialIcons", colors: ["#BCA88E", "#A78A5E", "#7D7954"], delay: 200 },
+    //{ title: "Historial", screen: "Record", icon: "history", iconType: "MaterialIcons", colors: ["#BCA88E", "#A78A5E", "#7D7954"], delay: 200 },
     { title: "Proveedores", screen: "Suppliers", icon: "people-outline", iconType: "Ionicons", colors: ["#7D7954", "#86918C", "#D3CCBE"], delay: 300 },
     { title: "Materia Prima", screen: "Materials", icon: "layers-outline", iconType: "Ionicons", colors: ["#BCA88E", "#A78A5E", "#7D7954"], delay: 400 },
     { title: "Categorías", screen: "Categories", iconType: "MaterialIcons", icon: "local-offer", colors: ["#A78A5E", "#BCA88E", "#DFCCAC"], delay: 500 },
