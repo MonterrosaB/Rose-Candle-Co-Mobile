@@ -30,7 +30,6 @@ export function ProductDetailUI({
 }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      {/* HEADER */}
       <View style={[styles.header, { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }]}>
         <TouchableOpacity onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -39,7 +38,6 @@ export function ProductDetailUI({
         <View style={{ width: 24 }} /> 
       </View>
 
-      {/* SCROLL */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity onPress={pickImage}>
           <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
@@ -149,7 +147,7 @@ export function ProductDetailUI({
           <Text style={styles.addText}>+ Añadir Componente</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <TouchableOpacity style={styles.saveButton} disabled={true} onPress={handleSave}>
           <Text style={styles.saveText}>Guardar Cambios</Text>
         </TouchableOpacity>
       </ScrollView>

@@ -4,22 +4,29 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
+// Componente de interfaz para crear o editar una colección
 export function CollectionsDetailUI({ collection, name, setName, saving, handleSave, navigation }) {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Header con botón de regreso y título */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
+            {/* Botón para regresar a la pantalla anterior */}
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Feather name="arrow-left" size={28} color="#a0522d" />
             </TouchableOpacity>
+
+            {/* Título dinámico: "Editar Colección" o "Nueva Colección" */}
             <Text style={styles.header}>
               {collection ? "Editar Colección" : "Nueva Colección"}
             </Text>
           </View>
         </View>
 
+        {/* Card principal para formulario */}
         <View style={styles.card}>
+          {/* Campo de nombre de la colección */}
           <Text style={styles.label}>Nombre</Text>
           <TextInput
             style={styles.input}
@@ -28,14 +35,16 @@ export function CollectionsDetailUI({ collection, name, setName, saving, handleS
             placeholder="Escribe el nombre..."
           />
 
+          {/* Botones de acción: Guardar / Cancelar */}
           <View style={styles.buttonsContainer}>
+            {/* Botón Guardar o Modificar */}
             <TouchableOpacity
               style={[styles.button, styles.saveButton]}
               onPress={handleSave}
-              disabled={saving}
+              disabled={saving} // Deshabilita mientras se guarda
             >
               {saving ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" /> // Muestra loader mientras guarda
               ) : (
                 <Text style={styles.buttonText}>
                   {collection ? "Modificar" : "Guardar"}
@@ -43,6 +52,7 @@ export function CollectionsDetailUI({ collection, name, setName, saving, handleS
               )}
             </TouchableOpacity>
 
+            {/* Botón Cancelar */}
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
               onPress={() => navigation.goBack()}
@@ -56,6 +66,7 @@ export function CollectionsDetailUI({ collection, name, setName, saving, handleS
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
   container: { padding: 20, paddingBottom: 40 },

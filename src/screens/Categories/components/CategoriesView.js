@@ -6,19 +6,20 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-} from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+} from "react-native"; // Componentes básicos de React Native
+import { MaterialIcons } from "@expo/vector-icons"; // Iconos de Material
 
 export default function CategoriesView({
-  categories,
-  loading,
-  currentPage,
-  setCurrentPage,
-  totalPages,
-  deletingId,
-  handleDelete,
-  navigation
+  categories, // Array de categorías a mostrar
+  loading, // Estado de carga
+  currentPage, // Página actual de la paginación
+  setCurrentPage, // Función para cambiar de página
+  totalPages, // Total de páginas
+  deletingId, // ID de la categoría que se está eliminando
+  handleDelete, // Función para eliminar categoría
+  navigation // Navegación entre pantallas
 }) {
+  // Si está cargando, mostramos un indicador de carga
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -27,18 +28,20 @@ export default function CategoriesView({
     );
   }
 
+  // Renderizado de cada fila de la tabla
   const renderItem = ({ item, index }) => (
     <View
       style={[
         styles.row,
-        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" },
+        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" }, // Alternamos colores de fila
       ]}
     >
       <Text style={styles.nameCell} numberOfLines={1}>
-        {item.name}
+        {item.name} {/* Nombre de la categoría */}
       </Text>
 
       <View style={styles.actionsCell}>
+        {/* Botón para editar */}
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() => navigation.navigate("CategoriesDetails", { category: item })}
@@ -46,16 +49,17 @@ export default function CategoriesView({
           <MaterialIcons name="edit" size={18} color="#fff" />
         </TouchableOpacity>
 
+        {/* Botón para eliminar */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
             { backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f" },
           ]}
           onPress={() => handleDelete(item._id)}
-          disabled={deletingId === item._id}
+          disabled={deletingId === item._id} // Deshabilitamos si se está eliminando
         >
           {deletingId === item._id ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#fff" /> // Indicador mientras elimina
           ) : (
             <MaterialIcons name="delete" size={18} color="#fff" />
           )}
@@ -66,6 +70,7 @@ export default function CategoriesView({
 
   return (
     <View style={styles.container}>
+      {/* Encabezado con título y botón de agregar */}
       <View style={styles.headerBox}>
         <Text style={styles.header}>Categorías</Text>
         <TouchableOpacity
@@ -77,32 +82,39 @@ export default function CategoriesView({
         </TouchableOpacity>
       </View>
 
+      {/* Tabla de categorías */}
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
+          {/* Cabecera de la tabla */}
           <View style={styles.tableHeader}>
             <Text style={[styles.headerText, { flex: 2 }]}>Categoría</Text>
             <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>Acciones</Text>
           </View>
 
+          {/* Lista de categorías */}
           <FlatList
-            data={categories}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => item._id ?? index.toString()}
-            showsVerticalScrollIndicator={false}
+            data={categories} // Datos a renderizar
+            renderItem={renderItem} // Función que renderiza cada fila
+            keyExtractor={(item, index) => item._id ?? index.toString()} // Clave única
+            showsVerticalScrollIndicator={false} // Ocultar scrollbar vertical
           />
         </View>
 
+        {/* Paginación */}
         <View style={styles.pagination}>
+          {/* Botón anterior */}
           <TouchableOpacity disabled={currentPage === 1} onPress={() => setCurrentPage((p) => p - 1)}>
             <Text style={[styles.pageBtn, currentPage === 1 && styles.disabled]}>Anterior</Text>
           </TouchableOpacity>
 
+          {/* Números de página */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <TouchableOpacity key={page} onPress={() => setCurrentPage(page)}>
               <Text style={[styles.pageNumber, page === currentPage && styles.activePage]}>{page}</Text>
             </TouchableOpacity>
           ))}
 
+          {/* Botón siguiente */}
           <TouchableOpacity disabled={currentPage === totalPages} onPress={() => setCurrentPage((p) => p + 1)}>
             <Text style={[styles.pageBtn, currentPage === totalPages && styles.disabled]}>Siguiente</Text>
           </TouchableOpacity>
@@ -112,6 +124,7 @@ export default function CategoriesView({
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
   headerBox: {

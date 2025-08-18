@@ -21,7 +21,7 @@ export default function CategoriesMateriaDetailUI({
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Encabezado gris con flecha y texto */}
+        {/* Encabezado gris con flecha y título */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={() => navigation.navigate("CategoriesMateria")}>
@@ -33,15 +33,16 @@ export default function CategoriesMateriaDetailUI({
           </View>
         </View>
 
-        {/* Formulario */}
+        {/* Formulario para el nombre de la categoría */}
         <Text style={styles.label}>Nombre de la categoría</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
+          placeholder="Escribe el nombre..."
         />
 
-        {/* Botones */}
+        {/* Botones Guardar y Cancelar */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={[styles.button, styles.saveButton]}
@@ -68,6 +69,7 @@ export default function CategoriesMateriaDetailUI({
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
   container: { padding: 20, paddingBottom: 40 },

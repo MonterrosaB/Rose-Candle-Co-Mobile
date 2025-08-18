@@ -60,7 +60,6 @@ export function ProductsUI({ products = [], loading }) {
 
   return (
     <View style={styles.container}>
-      {/* Encabezado con título y botón */}
       <View style={styles.header}>
         <Text style={styles.title}>Productos</Text>
         <TouchableOpacity

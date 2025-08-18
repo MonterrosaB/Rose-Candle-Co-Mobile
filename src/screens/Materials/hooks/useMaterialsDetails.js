@@ -6,7 +6,6 @@ export function useMaterialsDetails({ route, navigation }) {
   const { material } = route.params || {};
   const navigationBack = useNavigation();
 
-  // Estados para el formulario
   const [name, setName] = useState(material?.name || "");
   const [unit, setUnit] = useState(material?.unit || "");
   const [currentStock, setCurrentStock] = useState(String(material?.currentStock || ""));

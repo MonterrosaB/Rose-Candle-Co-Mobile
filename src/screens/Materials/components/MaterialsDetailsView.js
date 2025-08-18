@@ -10,22 +10,25 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
+// Componente UI para mostrar los detalles y edición de un material
 export default function MaterialsDetailsView(props) {
+  // Props desestructuradas desde el hook
   const {
-    loading,
-    name, setName,
-    unit, setUnit,
-    currentStock, setCurrentStock,
-    currentPrice, setCurrentPrice,
-    category, setCategory,
-    supplier, setSupplier,
-    categorias,
-    proveedores,
-    unidades,
-    handleSave,
-    navigationBack
+    loading,          // Indica si los datos están cargando
+    name, setName,    // Nombre del material y función para actualizarlo
+    unit, setUnit,    // Unidad de medida y función para actualizarla
+    currentStock, setCurrentStock, // Stock actual y función para actualizarlo
+    currentPrice, setCurrentPrice, // Precio actual y función para actualizarlo
+    category, setCategory,         // Categoría seleccionada y función para actualizarla
+    supplier, setSupplier,         // Proveedor seleccionado y función para actualizarlo
+    categorias,                    // Lista de categorías disponibles
+    proveedores,                   // Lista de proveedores disponibles
+    unidades,                       // Lista de unidades disponibles
+    handleSave,                     // Función para guardar cambios
+    navigationBack                  // Navegación para regresar
   } = props;
 
+  // Mostrar loader mientras se cargan los datos
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -39,7 +42,7 @@ export default function MaterialsDetailsView(props) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Editar Material</Text>
 
-      {/* Nombre */}
+      {/* Nombre del material */}
       <Text style={styles.label}>Nombre del material</Text>
       <TextInput
         style={styles.input}
@@ -48,7 +51,7 @@ export default function MaterialsDetailsView(props) {
         onChangeText={setName}
       />
 
-      {/* Unidad */}
+      {/* Unidad de medida */}
       <Text style={styles.label}>Unidad de medida</Text>
       <View style={styles.pickerContainer}>
         <Picker
@@ -116,7 +119,7 @@ export default function MaterialsDetailsView(props) {
         </Picker>
       </View>
 
-      {/* Botones */}
+      {/* Botones Cancelar y Guardar */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
@@ -136,10 +139,11 @@ export default function MaterialsDetailsView(props) {
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingTop: 30, // <-- BAJA EL CONTENIDO
+    paddingTop: 30,
     backgroundColor: "#fff",
     flexGrow: 1,
   },
@@ -184,16 +188,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: "#fafafa",
     justifyContent: "center",
-    height: 50, // <-- MÁS ALTO
+    height: 50,
   },
   picker: {
     flex: 1,
     color: "#000",
-    fontSize: 16, // <-- FUENTE FIJA
-    paddingLeft: 8, // <-- MARGEN INTERIOR
+    fontSize: 16,
+    paddingLeft: 8,
   },
   pickerItem: {
-    fontSize: 16, // <-- TAMBIÉN PARA IOS
+    fontSize: 16,
     height: 50,
   },
   buttonContainer: {

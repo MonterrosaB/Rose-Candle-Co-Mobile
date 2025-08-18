@@ -9,16 +9,18 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
+// Componente de presentación para la lista de proveedores
 export const SuppliersUI = ({
-  loading,
-  paginatedData,
-  currentPage,
-  totalPages,
-  setCurrentPage,
-  handleDelete,
-  deletingId,
-  navigation,
+  loading,         // Estado de carga
+  paginatedData,   // Datos de proveedores paginados
+  currentPage,     // Página actual
+  totalPages,      // Total de páginas
+  setCurrentPage,  // Función para cambiar página
+  handleDelete,    // Función para eliminar proveedor
+  deletingId,      // ID del proveedor que se está eliminando
+  navigation,      // Objeto de navegación para movernos entre pantallas
 }) => {
+  // Mostramos un loader mientras cargan los datos
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -27,22 +29,23 @@ export const SuppliersUI = ({
     );
   }
 
+  // Render de cada fila de proveedor
   const renderItem = ({ item, index }) => (
     <View
       style={[
         styles.row,
-        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" },
+        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" }, // filas alternadas
       ]}
     >
       <Text style={styles.nameCell} numberOfLines={1} ellipsizeMode="tail">
         {item.name}
       </Text>
-
       <Text style={styles.contactCell} numberOfLines={1} ellipsizeMode="tail">
         {item.contact}
       </Text>
 
       <View style={styles.actionsCell}>
+        {/* Botón editar */}
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() => navigation.navigate("SupplierDetails", { supplier: item })}
@@ -50,16 +53,17 @@ export const SuppliersUI = ({
           <MaterialIcons name="edit" size={18} color="#fff" />
         </TouchableOpacity>
 
+        {/* Botón eliminar */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
             { backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f" },
           ]}
           onPress={() => handleDelete(item._id)}
-          disabled={deletingId === item._id}
+          disabled={deletingId === item._id} // deshabilitado si se está eliminando
         >
           {deletingId === item._id ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color="#fff" /> // loader mientras elimina
           ) : (
             <MaterialIcons name="delete" size={18} color="#fff" />
           )}
@@ -68,6 +72,7 @@ export const SuppliersUI = ({
     </View>
   );
 
+  // Render de la paginación
   const renderPagination = () => (
     <View style={styles.pagination}>
       <TouchableOpacity
@@ -84,7 +89,7 @@ export const SuppliersUI = ({
           <Text
             style={[
               styles.pageNumber,
-              page === currentPage && styles.activePage,
+              page === currentPage && styles.activePage, // página activa
             ]}
           >
             {page}
@@ -107,6 +112,7 @@ export const SuppliersUI = ({
 
   return (
     <View style={styles.screen}>
+      {/* Header con título y botón agregar */}
       <View style={styles.headerBox}>
         <Text style={styles.header}>Proveedores</Text>
         <TouchableOpacity
@@ -118,6 +124,7 @@ export const SuppliersUI = ({
         </TouchableOpacity>
       </View>
 
+      {/* Tabla de proveedores */}
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
@@ -131,8 +138,8 @@ export const SuppliersUI = ({
           </View>
 
           <FlatList
-            data={paginatedData}
-            renderItem={renderItem}
+            data={paginatedData}          // datos paginados
+            renderItem={renderItem}       // render de cada fila
             keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
           />
@@ -143,6 +150,7 @@ export const SuppliersUI = ({
   );
 };
 
+// Estilos del componente
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
   headerBox: {

@@ -8,60 +8,63 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-} from "react-native";
-import { Feather } from "@expo/vector-icons";
+} from "react-native"; // Componentes de React Native
+import { Feather } from "@expo/vector-icons"; // Iconos Feather
 
 export default function CategoriesDetailsView({
-  category,
-  name,
-  setName,
-  saving,
-  handleSave,
-  navigation,
+  category, // Objeto de categoría a editar, null si es nueva
+  name, // Valor del campo de nombre
+  setName, // Función para actualizar el nombre
+  saving, // Estado de guardado (loading)
+  handleSave, // Función que guarda la categoría
+  navigation, // Navegación entre pantallas
 }) {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Encabezado gris con flecha y título */}
+        {/* Encabezado con flecha para regresar */}
         <View style={styles.headerContainer}>
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Feather name="arrow-left" size={28} color="#a0522d" />
             </TouchableOpacity>
             <Text style={styles.header}>
-              {category ? "Editar Categoría" : "Nueva Categoría"}
+              {category ? "Editar Categoría" : "Nueva Categoría"} {/* Texto según acción */}
             </Text>
           </View>
         </View>
 
-        {/* Tarjeta con campo nombre */}
+        {/* Tarjeta con formulario */}
         <View style={styles.card}>
           <Text style={styles.label}>Nombre</Text>
           <TextInput
             style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Escribe el nombre..."
+            value={name} // Valor del input
+            onChangeText={setName} // Actualiza el valor
+            placeholder="Escribe el nombre..." // Placeholder
           />
 
+          {/* Botones */}
           <View style={styles.buttonsContainer}>
+            {/* Botón guardar/modificar */}
             <TouchableOpacity
               style={[styles.button, styles.saveButton]}
               onPress={handleSave}
-              disabled={saving}
+              disabled={saving} // Deshabilitado mientras guarda
             >
               {saving ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" /> // Indicador mientras guarda
               ) : (
                 <Text style={styles.buttonText}>
-                  {category ? "Modificar" : "Guardar"}
+                  {category ? "Modificar" : "Guardar"} {/* Texto según acción */}
                 </Text>
               )}
             </TouchableOpacity>
 
+            {/* Botón cancelar */}
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.goBack()} // Regresa a la pantalla anterior
             >
               <Text style={styles.buttonTextCancel}>Cancelar</Text>
             </TouchableOpacity>
@@ -72,6 +75,7 @@ export default function CategoriesDetailsView({
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#fff" },
   container: { padding: 20, paddingBottom: 40 },

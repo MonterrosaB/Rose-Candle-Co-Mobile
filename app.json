@@ -4,11 +4,11 @@
     "slug": "Rose-Candle-Co-Mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Isotipo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/Isotipo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

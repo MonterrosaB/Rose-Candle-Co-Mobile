@@ -1,7 +1,9 @@
 import React from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 
+// Componente para mostrar el detalle o formulario de un empleado
 export default function EmployeesDetailUI({ loading, employee, setField, onSave }) {
+  // Mostrar indicador de carga mientras se obtiene la información del empleado
   if (loading) {
     return (
       <View style={styles.center}>
@@ -13,30 +15,30 @@ export default function EmployeesDetailUI({ loading, employee, setField, onSave 
 
   return (
     <View style={styles.container}>
-      {/* Título */}
+      {/* Título del formulario */}
       <Text style={styles.title}>
         {employee?.id ? "Editar empleado" : "Nuevo empleado"}
       </Text>
 
-      {/* Campo Nombre */}
+      {/* Campo para editar el nombre del empleado */}
       <Text style={styles.label}>Nombre:</Text>
       <TextInput
         style={styles.input}
-        value={employee?.name ?? ""}
-        onChangeText={(text) => setField("name", text)}
+        value={employee?.name ?? ""} // valor actual o vacío
+        onChangeText={(text) => setField("name", text)} // actualizar el estado externo
         placeholder="Ingrese el nombre"
       />
 
-      {/* Campo Rol */}
+      {/* Campo para editar el rol del empleado */}
       <Text style={styles.label}>Rol:</Text>
       <TextInput
         style={styles.input}
-        value={employee?.role ?? ""}
-        onChangeText={(text) => setField("role", text)}
+        value={employee?.role ?? ""} // valor actual o vacío
+        onChangeText={(text) => setField("role", text)} // actualizar el estado externo
         placeholder="Ingrese el rol"
       />
 
-      {/* Botón Guardar */}
+      {/* Botón para guardar los cambios */}
       <TouchableOpacity style={styles.saveButton} onPress={onSave}>
         <Text style={styles.saveText}>Guardar</Text>
       </TouchableOpacity>
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 30,
-    backgroundColor: "#28a745",
+    backgroundColor: "#28a745", // verde para indicar acción positiva
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: "center"

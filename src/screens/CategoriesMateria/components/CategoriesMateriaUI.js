@@ -19,6 +19,7 @@ export default function CategoriesMateriaUI({
   handleDelete,
   navigation,
 }) {
+  // Renderiza cada fila de la tabla con nombre y acciones
   const renderItem = ({ item, index }) => (
     <View
       style={[
@@ -31,6 +32,7 @@ export default function CategoriesMateriaUI({
       </Text>
 
       <View style={styles.actionsCell}>
+        {/* Botón Editar */}
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() =>
@@ -40,6 +42,7 @@ export default function CategoriesMateriaUI({
           <MaterialIcons name="edit" size={18} color="#fff" />
         </TouchableOpacity>
 
+        {/* Botón Eliminar */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
@@ -58,6 +61,7 @@ export default function CategoriesMateriaUI({
     </View>
   );
 
+  // Renderiza la paginación de la tabla
   const renderPagination = () => (
     <View style={styles.pagination}>
       <TouchableOpacity
@@ -92,6 +96,7 @@ export default function CategoriesMateriaUI({
     </View>
   );
 
+  // Loader mientras se cargan los datos
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -102,6 +107,7 @@ export default function CategoriesMateriaUI({
 
   return (
     <View style={styles.screen}>
+      {/* Header con título y botón agregar */}
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Categorías de Materia{"\n"}Prima</Text>
         <TouchableOpacity
@@ -115,6 +121,7 @@ export default function CategoriesMateriaUI({
         </TouchableOpacity>
       </View>
 
+      {/* Tabla de categorías */}
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
@@ -140,6 +147,7 @@ export default function CategoriesMateriaUI({
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
   headerContainer: {

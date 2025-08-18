@@ -2,15 +2,21 @@ import { useState } from "react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Alert } from "react-native";
 
+// Hook personalizado para manejar la lógica de detalle de categoría de materias primas
 export default function useCategoriesMateriaDetail() {
   const navigation = useNavigation();
   const route = useRoute();
+
+  // Se obtiene la categoría desde los parámetros de la ruta, si existe
   const category = route.params?.category ?? null;
 
+  // Estado para el nombre de la categoría y para indicar si se está guardando
   const [name, setName] = useState(category ? category.name : "");
   const [saving, setSaving] = useState(false);
 
+  // Función que guarda o crea la categoría según corresponda
   const handleSave = async () => {
+    // Validación básica: nombre obligatorio
     if (!name.trim()) {
       Alert.alert("Error", "El nombre de la categoría es obligatorio.");
       return;
@@ -21,6 +27,7 @@ export default function useCategoriesMateriaDetail() {
       const payload = { name: name.trim() };
       let res;
 
+      // Si existe categoría, se hace PUT para actualizar; si no, POST para crear
       if (category) {
         res = await fetch(
           `https://rose-candle-co.onrender.com/api/rawMaterialCategories/${category._id}`,
@@ -41,6 +48,7 @@ export default function useCategoriesMateriaDetail() {
         );
       }
 
+      // Se intenta parsear JSON, si falla se toma como texto plano
       let body;
       try {
         body = await res.json();
@@ -48,6 +56,7 @@ export default function useCategoriesMateriaDetail() {
         body = await res.text();
       }
 
+      // Si la respuesta es correcta, se notifica al usuario y se regresa
       if (res.ok) {
         Alert.alert(
           category ? "Guardado" : "Creado",
@@ -57,6 +66,7 @@ export default function useCategoriesMateriaDetail() {
         );
         navigation.goBack();
       } else {
+        // Manejo de error detallado según la respuesta del servidor
         const errMsg =
           (body && (body.message || body.error || JSON.stringify(body))) ||
           `Respuesta del servidor: ${res.status}`;
@@ -70,6 +80,7 @@ export default function useCategoriesMateriaDetail() {
     }
   };
 
+  // Se retornan todos los valores y funciones necesarios para el componente UI
   return {
     name,
     setName,

@@ -9,16 +9,18 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
+// Componente UI para mostrar la lista de materiales
 export default function MaterialsView({
-  loading,
-  materials,
-  totalPages,
-  currentPage,
-  setCurrentPage,
-  deletingId,
-  handleDelete,
-  navigation,
+  loading,       // Indica si los datos están cargando
+  materials,     // Array de materiales
+  totalPages,    // Total de páginas para paginación
+  currentPage,   // Página actual
+  setCurrentPage,// Función para cambiar de página
+  deletingId,    // ID del material que se está eliminando
+  handleDelete,  // Función para eliminar un material
+  navigation,    // Navegación para ir a detalles/agregar
 }) {
+  // Mostrar loader mientras se cargan los datos
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -27,29 +29,33 @@ export default function MaterialsView({
     );
   }
 
+  // Renderiza cada fila de material
   const renderItem = ({ item, index }) => (
     <View
       style={[
         styles.row,
-        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" },
+        { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" }, // Alterna color de filas
       ]}
     >
       <Text style={styles.nameCell} numberOfLines={1}>{item.name}</Text>
       <Text style={styles.qtyCell}>{item.currentStock} {item.unit}</Text>
       <View style={styles.actionsCell}>
+        {/* Botón de editar */}
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() => navigation.navigate("MaterialsDetails", { material: item })}
         >
           <MaterialIcons name="edit" size={18} color="#fff" />
         </TouchableOpacity>
+
+        {/* Botón de eliminar */}
         <TouchableOpacity
           style={[
             styles.iconBtn,
             { backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f" },
           ]}
           onPress={() => handleDelete(item._id)}
-          disabled={deletingId === item._id}
+          disabled={deletingId === item._id} // Deshabilita mientras se elimina
         >
           {deletingId === item._id 
             ? <ActivityIndicator size="small" color="#fff" /> 
@@ -60,16 +66,22 @@ export default function MaterialsView({
     </View>
   );
 
+  // Renderiza la paginación
   const renderPagination = () => (
     <View style={styles.pagination}>
+      {/* Botón anterior */}
       <TouchableOpacity disabled={currentPage === 1} onPress={() => setCurrentPage(prev => prev - 1)}>
         <Text style={[styles.pageBtn, currentPage === 1 && styles.disabled]}>Anterior</Text>
       </TouchableOpacity>
+
+      {/* Números de página */}
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
         <TouchableOpacity key={page} onPress={() => setCurrentPage(page)}>
           <Text style={[styles.pageNumber, page === currentPage && styles.activePage]}>{page}</Text>
         </TouchableOpacity>
       ))}
+
+      {/* Botón siguiente */}
       <TouchableOpacity disabled={currentPage === totalPages} onPress={() => setCurrentPage(prev => prev + 1)}>
         <Text style={[styles.pageBtn, currentPage === totalPages && styles.disabled]}>Siguiente</Text>
       </TouchableOpacity>
@@ -78,6 +90,7 @@ export default function MaterialsView({
 
   return (
     <View style={styles.container}>
+      {/* Encabezado con título y botón agregar */}
       <View style={styles.headerBox}>
         <Text style={styles.header}>Materia Prima</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("MaterialsDetails", { material: null })}>
@@ -85,13 +98,18 @@ export default function MaterialsView({
           <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Tabla de materiales */}
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
+          {/* Encabezado de la tabla */}
           <View style={styles.tableHeader}>
             <Text style={[styles.headerText, { flex: 2 }]}>Materia</Text>
             <Text style={[styles.headerText, { flex: 1, textAlign: "center" }]}>Cantidad</Text>
             <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>Acciones</Text>
           </View>
+
+          {/* Lista de materiales */}
           <FlatList
             data={materials}
             renderItem={renderItem}
@@ -99,12 +117,15 @@ export default function MaterialsView({
             showsVerticalScrollIndicator={false}
           />
         </View>
+
+        {/* Paginación */}
         {renderPagination()}
       </View>
     </View>
   );
 }
 
+// Estilos del componente
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
   headerBox: {
