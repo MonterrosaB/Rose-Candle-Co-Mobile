@@ -11,33 +11,31 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function Materials() {
-  const [materials, setMaterials] = useState([]);
+export default function Categories() {
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 13;
   const navigation = useNavigation();
   const [deletingId, setDeletingId] = useState(null);
 
-  // Traer materiales desde API
-  const fetchMaterials = async () => {
+  const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://rose-candle-co.onrender.com/api/rawMaterials");
+      const res = await fetch("https://rose-candle-co.onrender.com/api/productCategories");
       const data = await res.json();
-      setMaterials(data);
+      setCategories(data);
     } catch (err) {
-      console.error("Error fetching materials:", err);
+      console.error("Error fetching categories:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Eliminar material con confirmación
   const handleDelete = (id) => {
     Alert.alert(
-      "Eliminar material",
-      "¿Estás seguro de que quieres eliminar este material?",
+      "Eliminar categoría",
+      "¿Estás seguro de que quieres eliminar esta categoría?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -47,7 +45,7 @@ export default function Materials() {
             setDeletingId(id);
             try {
               const res = await fetch(
-                `https://rose-candle-co.onrender.com/api/rawMaterials/${id}`,
+                `https://rose-candle-co.onrender.com/api/productCategories/${id}`,
                 { method: "DELETE" }
               );
 
@@ -61,9 +59,8 @@ export default function Materials() {
               console.log("DELETE response:", res.status, body);
 
               if (res.ok) {
-                // eliminar localmente optimista
-                setMaterials((prev) => prev.filter((m) => m._id !== id));
-                Alert.alert("Eliminado", "El material ha sido eliminado.");
+                setCategories((prev) => prev.filter((c) => c._id !== id));
+                Alert.alert("Eliminado", "La categoría ha sido eliminada.");
               } else {
                 const errMsg =
                   (body && (body.message || body.error || JSON.stringify(body))) ||
@@ -71,11 +68,11 @@ export default function Materials() {
                 throw new Error(errMsg);
               }
             } catch (err) {
-              console.error("Error eliminando material:", err);
-              Alert.alert("Error", err.message || "No se pudo eliminar el material");
+              console.error("Error eliminando categoría:", err);
+              Alert.alert("Error", err.message || "No se pudo eliminar la categoría");
             } finally {
               setDeletingId(null);
-              fetchMaterials(); // sincronizar
+              fetchCategories();
             }
           },
         },
@@ -84,17 +81,17 @@ export default function Materials() {
   };
 
   useEffect(() => {
-    fetchMaterials();
+    fetchCategories();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchMaterials();
+      fetchCategories();
     }, [])
   );
 
-  const totalPages = Math.ceil(materials.length / itemsPerPage);
-  const paginatedData = materials.slice(
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const paginatedData = categories.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -110,15 +107,11 @@ export default function Materials() {
         {item.name}
       </Text>
 
-      <Text style={styles.qtyCell}>
-        {item.currentStock} {item.unit}
-      </Text>
-
       <View style={styles.actionsCell}>
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() =>
-            navigation.navigate("MaterialsDetails", { material: item })
+            navigation.navigate("CategoriesDetails", { category: item })
           }
         >
           <MaterialIcons name="edit" size={18} color="#fff" />
@@ -194,27 +187,22 @@ export default function Materials() {
 
   return (
     <View style={styles.container}>
-      {/* Header: título + botón Agregar */}
       <View style={styles.headerBox}>
-        <Text style={styles.header}>Materia Prima</Text>
+  <Text style={styles.header}>Categorías</Text>
+  <TouchableOpacity
+    style={styles.addButton}
+    onPress={() => navigation.navigate("CategoriesDetails", { category: null })}
+  >
+    <MaterialIcons name="add" size={20} color="#fff" />
+    <Text style={styles.addButtonText}>Agregar</Text>
+  </TouchableOpacity>
+</View>
 
-        {/* Botón Agregar — texto + color #26328dff y alineado con la tabla */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("MaterialsDetails", { material: null })}
-        >
-          <MaterialIcons name="add" size={18} color="#fff" />
-          <Text style={styles.addButtonText}>Agregar</Text>
-        </TouchableOpacity>
-      </View>
 
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, { flex: 2 }]}>Materia</Text>
-            <Text style={[styles.headerText, { flex: 1, textAlign: "center" }]}>
-              Cantidad
-            </Text>
+            <Text style={[styles.headerText, { flex: 2 }]}>Categoría</Text>
             <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>
               Acciones
             </Text>
@@ -236,27 +224,24 @@ export default function Materials() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
-
-  // Alineado con la tabla usando marginHorizontal igual a tableWrapper
-  headerBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-    marginTop: 60,
-    marginHorizontal: 5,
-  },
-  header: { fontSize: 20, fontWeight: "bold", color: "#333" },
-
+ headerBox: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 10,
+  marginTop: 60,
+  marginHorizontal: 5, // ahora coincide con la tabla
+},
+  header: { fontSize: 20, fontWeight: "bold", color: "#333", marginLeft: 10 },
   addButton: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#26328dff", // color pedido
-    paddingVertical: 6,
+    backgroundColor: "#26328dff",
+    paddingVertical:5,
     paddingHorizontal: 12,
     borderRadius: 6,
+    alignItems: "center",
   },
-  addButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 6 },
+  addButtonText: { color: "#fff", fontSize: 14, marginLeft: 4 },
 
   tableWrapper: {
     flex: 1,
@@ -287,7 +272,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f2f2f2",
   },
   nameCell: { flex: 2, fontSize: 14, color: "#333" },
-  qtyCell: { flex: 1, fontSize: 14, color: "#555", textAlign: "center" },
   actionsCell: {
     width: 90,
     flexDirection: "row",
@@ -299,7 +283,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 4,
   },
-
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
   pagination: {
     flexDirection: "row",

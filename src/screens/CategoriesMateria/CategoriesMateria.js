@@ -11,33 +11,41 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function Materials() {
-  const [materials, setMaterials] = useState([]);
+export default function CategoriesMateria() {
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 13;
   const navigation = useNavigation();
   const [deletingId, setDeletingId] = useState(null);
 
-  // Traer materiales desde API
-  const fetchMaterials = async () => {
+  const fetchCategories = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://rose-candle-co.onrender.com/api/rawMaterials");
+      const res = await fetch("https://rose-candle-co.onrender.com/api/rawmaterialcategories");
       const data = await res.json();
-      setMaterials(data);
+      setCategories(data);
     } catch (err) {
-      console.error("Error fetching materials:", err);
+      console.error("Error fetching categories:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Eliminar material con confirmación
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCategories();
+    }, [])
+  );
+
   const handleDelete = (id) => {
     Alert.alert(
-      "Eliminar material",
-      "¿Estás seguro de que quieres eliminar este material?",
+      "Eliminar categoría",
+      "¿Estás seguro de que quieres eliminar esta categoría?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -47,7 +55,7 @@ export default function Materials() {
             setDeletingId(id);
             try {
               const res = await fetch(
-                `https://rose-candle-co.onrender.com/api/rawMaterials/${id}`,
+                `https://rose-candle-co.onrender.com/api/rawmaterialcategories/${id}`,
                 { method: "DELETE" }
               );
 
@@ -57,13 +65,11 @@ export default function Materials() {
               } catch (e) {
                 body = await res.text();
               }
-
-              console.log("DELETE response:", res.status, body);
+              console.log("DELETE category:", res.status, body);
 
               if (res.ok) {
-                // eliminar localmente optimista
-                setMaterials((prev) => prev.filter((m) => m._id !== id));
-                Alert.alert("Eliminado", "El material ha sido eliminado.");
+                setCategories((prev) => prev.filter((c) => c._id !== id));
+                Alert.alert("Eliminado", "La categoría ha sido eliminada.");
               } else {
                 const errMsg =
                   (body && (body.message || body.error || JSON.stringify(body))) ||
@@ -71,11 +77,11 @@ export default function Materials() {
                 throw new Error(errMsg);
               }
             } catch (err) {
-              console.error("Error eliminando material:", err);
-              Alert.alert("Error", err.message || "No se pudo eliminar el material");
+              console.error("Error eliminando categoría:", err);
+              Alert.alert("Error", err.message || "No se pudo eliminar la categoría");
             } finally {
               setDeletingId(null);
-              fetchMaterials(); // sincronizar
+              fetchCategories();
             }
           },
         },
@@ -83,18 +89,8 @@ export default function Materials() {
     );
   };
 
-  useEffect(() => {
-    fetchMaterials();
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchMaterials();
-    }, [])
-  );
-
-  const totalPages = Math.ceil(materials.length / itemsPerPage);
-  const paginatedData = materials.slice(
+  const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage));
+  const paginatedData = categories.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -106,20 +102,14 @@ export default function Materials() {
         { backgroundColor: index % 2 === 0 ? "#F2EBD9" : "#F9F7F3" },
       ]}
     >
-      <Text style={styles.nameCell} numberOfLines={1}>
+      <Text style={styles.nameCell} numberOfLines={1} ellipsizeMode="tail">
         {item.name}
-      </Text>
-
-      <Text style={styles.qtyCell}>
-        {item.currentStock} {item.unit}
       </Text>
 
       <View style={styles.actionsCell}>
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
-          onPress={() =>
-            navigation.navigate("MaterialsDetails", { material: item })
-          }
+          onPress={() => navigation.navigate("CategoriesMateriaDetail", { category: item })}
         >
           <MaterialIcons name="edit" size={18} color="#fff" />
         </TouchableOpacity>
@@ -127,9 +117,7 @@ export default function Materials() {
         <TouchableOpacity
           style={[
             styles.iconBtn,
-            {
-              backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f",
-            },
+            { backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f" },
           ]}
           onPress={() => handleDelete(item._id)}
           disabled={deletingId === item._id}
@@ -148,21 +136,14 @@ export default function Materials() {
     <View style={styles.pagination}>
       <TouchableOpacity
         disabled={currentPage === 1}
-        onPress={() => setCurrentPage((prev) => prev - 1)}
+        onPress={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
       >
-        <Text style={[styles.pageBtn, currentPage === 1 && styles.disabled]}>
-          Anterior
-        </Text>
+        <Text style={[styles.pageBtn, currentPage === 1 && styles.disabled]}>Anterior</Text>
       </TouchableOpacity>
 
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
         <TouchableOpacity key={page} onPress={() => setCurrentPage(page)}>
-          <Text
-            style={[
-              styles.pageNumber,
-              page === currentPage && styles.activePage,
-            ]}
-          >
+          <Text style={[styles.pageNumber, page === currentPage && styles.activePage]}>
             {page}
           </Text>
         </TouchableOpacity>
@@ -170,16 +151,9 @@ export default function Materials() {
 
       <TouchableOpacity
         disabled={currentPage === totalPages}
-        onPress={() => setCurrentPage((prev) => prev + 1)}
+        onPress={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
       >
-        <Text
-          style={[
-            styles.pageBtn,
-            currentPage === totalPages && styles.disabled,
-          ]}
-        >
-          Siguiente
-        </Text>
+        <Text style={[styles.pageBtn, currentPage === totalPages && styles.disabled]}>Siguiente</Text>
       </TouchableOpacity>
     </View>
   );
@@ -193,17 +167,14 @@ export default function Materials() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header: título + botón Agregar */}
-      <View style={styles.headerBox}>
-        <Text style={styles.header}>Materia Prima</Text>
-
-        {/* Botón Agregar — texto + color #26328dff y alineado con la tabla */}
+    <View style={styles.screen}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.header}>Categorías de Materia{"\n"}Prima</Text>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("MaterialsDetails", { material: null })}
+          onPress={() => navigation.navigate("CategoriesMateriaDetail", { category: null })}
         >
-          <MaterialIcons name="add" size={18} color="#fff" />
+          <MaterialIcons name="add" size={20} color="#fff" />
           <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>
       </View>
@@ -211,53 +182,50 @@ export default function Materials() {
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, { flex: 2 }]}>Materia</Text>
-            <Text style={[styles.headerText, { flex: 1, textAlign: "center" }]}>
-              Cantidad
-            </Text>
-            <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>
-              Acciones
-            </Text>
+            <Text style={[styles.headerText, { flex: 2 }]}>Nombre</Text>
+            <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>Acciones</Text>
           </View>
 
           <FlatList
             data={paginatedData}
             renderItem={renderItem}
-            keyExtractor={(item, index) => item._id ?? index.toString()}
+            keyExtractor={(item) => item._id}
             showsVerticalScrollIndicator={false}
           />
         </View>
 
-        {renderPagination()}
+        <View style={styles.paginationWrapper}>{renderPagination()}</View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
-
-  // Alineado con la tabla usando marginHorizontal igual a tableWrapper
-  headerBox: {
+  screen: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
+  headerContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
-    marginTop: 60,
+    marginTop: 70,  // <-- aumentado para bajar el bloque
+    marginBottom: 20,
     marginHorizontal: 5,
   },
-  header: { fontSize: 20, fontWeight: "bold", color: "#333" },
-
+  header: { 
+    fontSize: 20, 
+    fontWeight: "bold", 
+    color: "#333", 
+    marginLeft: 8, 
+  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#26328dff", // color pedido
+    backgroundColor: "#26328DFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
+    marginRight: 8,
   },
   addButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 6 },
-
   tableWrapper: {
     flex: 1,
     marginHorizontal: 5,
@@ -287,20 +255,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f2f2f2",
   },
   nameCell: { flex: 2, fontSize: 14, color: "#333" },
-  qtyCell: { flex: 1, fontSize: 14, color: "#555", textAlign: "center" },
-  actionsCell: {
-    width: 90,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconBtn: {
-    padding: 6,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-
+  actionsCell: { width: 90, flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  iconBtn: { padding: 6, borderRadius: 4, marginHorizontal: 4 },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  paginationWrapper: { marginTop: 10, marginBottom: 20 },
   pagination: {
     flexDirection: "row",
     justifyContent: "center",

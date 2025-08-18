@@ -1,16 +1,19 @@
 // firebaseConfig.js
-import { initializeApp } from "firebase/app";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBN4FW2kAQQ12ZUqhMGWCoGF8BRKAVmIso",
+  apiKey: "AIzaSyDsO4GYNHvI2IdWb7CQ1O94_vGDaeVlUfY",
   authDomain: "phoneverification-b1910.firebaseapp.com",
   projectId: "phoneverification-b1910",
-  storageBucket: "phoneverification-b1910.appspot.com",
+  storageBucket: "phoneverification-b1910.firebasestorage.app",
   messagingSenderId: "734925717212",
-  appId: "1:734925717212:android:8eff74b301072efe963e19",
+  appId: "1:734925717212:web:a1277f926c38d1cb963e19",
+  measurementId: "G-JDTEY8QN76"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export {auth, RecaptchaVerifier, signInWithPhoneNumber };
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export { firebase,firebaseConfig };

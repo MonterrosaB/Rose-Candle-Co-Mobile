@@ -1,49 +1,186 @@
-// AppNavigator.js
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 
-// Importa tus pantallas
+// ----------------------------------------------------
+// Pantallas principales (asegúrate que las rutas de archivos existan)
+// ----------------------------------------------------
 import Home from "../screens/Home/Home.js";
 import Materials from "../screens/Materials/Materials.js";
 import Sales from "../screens/Sales/Sales.js";
 import MaterialsDetails from "../screens/Materials/MaterialsDetails.js";
 import Stock from "../screens/Stock/Stock.js";
-import PhoneLogin from "../screens/Login/Login.js";
-import CodeVerification from "../screens/Login/CodeVerification.js";
+
+// Suppliers
+import Suppliers from "../screens/Suppliers/Suppliers.js";
+// Atención al nombre del archivo: ajusta si tu archivo se llama diferente
+import SupplierDetails from "../screens/Suppliers/SupliersDetails.js";
+
+// Categories (genéricas)
+import Categories from "../screens/Categories/Categories.js";
+import CategoriesDetails from "../screens/Categories/CategoriesDetails.js";
+
+// ----------------------------------------------------
+// CategoriesMateria (lista y detalle)
+// ----------------------------------------------------
+import CategoriesMateria from "../screens/CategoriesMateria/CategoriesMateria.js";
+import CategoriesMateriaDetail from "../screens/CategoriesMateria/CategoriesMateriaDetail.js";
+
+// ----------------------------------------------------
+// Collections (lista y detalle)
+// ----------------------------------------------------
+import Collections from "../screens/Collections/Collections.js";
+import CollectionsDetails from "../screens/Collections/CollectionsDetail.js";
+
+// ----------------------------------------------------
+// Products (lista y detalle) NUEVOS
+// ----------------------------------------------------
+import Products from "../screens/Products/Products.js";
+import ProductDetail from "../screens/Products/ProductDetail.js";
+
+// Login (comentado)
+// import PhoneLogin from "../screens/Login/Login.js";
+// import CodeVerification from "../screens/Login/CodeVerification.js";
+
+// Splash
+import SplashScreen from "../screens/Splash/SplashScreen.js";
 
 // Icons
-import { Feather } from "@expo/vector-icons"; // Home
-import { Octicons } from "@expo/vector-icons"; // Materials
-import { MaterialIcons } from "@expo/vector-icons"; // Sales, Stock
+import { Feather } from "@expo/vector-icons";
+import { Octicons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
+// Moti para animaciones
+import { MotiView } from "moti";
+
+// ----------------------------------------------------
+// Navegadores
+// ----------------------------------------------------
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Stack para Materials
-function MaterialsStack() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Materials" component={Materials} />
-      <Stack.Screen name="MaterialsDetails" component={MaterialsDetails} />
-    </Stack.Navigator>
-  );
-}
-
-// Stack para Stock (incluye también Materials)
+// ----------------------------------------------------
+// STACK INTERNOS PARA "STOCK" (contiene pantallas relacionadas)
+// ----------------------------------------------------
 function StockStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* Pantalla principal del módulo Stock */}
       <Stack.Screen name="StockHome" component={Stock} />
+
+      {/* Materials dentro de Stock */}
       <Stack.Screen name="Materials" component={Materials} />
       <Stack.Screen name="MaterialsDetails" component={MaterialsDetails} />
+
+      {/* Suppliers dentro de Stock */}
+      <Stack.Screen name="Suppliers" component={Suppliers} />
+      <Stack.Screen name="SupplierDetails" component={SupplierDetails} />
+
+      {/* Categories genéricas dentro de Stock */}
+      <Stack.Screen name="Categories" component={Categories} />
+      <Stack.Screen name="CategoriesDetails" component={CategoriesDetails} />
+
+      {/* CategoriesMateria (lista) y su detalle dentro de Stock */}
+      <Stack.Screen name="CategoriesMateria" component={CategoriesMateria} />
+      <Stack.Screen
+        name="CategoriesMateriaDetail"
+        component={CategoriesMateriaDetail}
+      />
+
+      {/* Collections (lista y detalle) dentro de Stock */}
+      <Stack.Screen name="Collections" component={Collections} />
+      <Stack.Screen name="CollectionsDetail" component={CollectionsDetails} />
+
+      {/* Products (lista y detalle) dentro de Stock */}
+      <Stack.Screen name="Products" component={Products} />
+      <Stack.Screen name="ProductDetail" component={ProductDetail} />
     </Stack.Navigator>
   );
 }
 
-// Tabs principales
+// Stack para Login (comentado)
+/*
+function LoginStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
+      <Stack.Screen name="CodeVerification" component={CodeVerification} />
+    </Stack.Navigator>
+  );
+}
+*/
+
+// ----------------------------------------------------
+// COMPONENTE ANIMADO PARA ICONOS DE TAB
+// ----------------------------------------------------
+function AnimatedTab({ focused, icon: IconComponent, label }) {
+  const baseWidth = 40; // espacio solo para icono
+  const expandedWidth = 110; // icono + texto
+
+  return (
+    <MotiView
+      animate={{
+        width: focused ? expandedWidth : baseWidth,
+        backgroundColor: focused ? "#A78A5E" : "transparent",
+        borderRadius: 20,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+      }}
+      transition={{ type: "timing", duration: 200 }}
+      style={{
+        height: 40,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: focused ? "flex-start" : "center",
+      }}
+    >
+      <IconComponent
+        name={label.iconName}
+        size={22}
+        color={focused ? "white" : "black"}
+      />
+
+      <MotiView
+        animate={{
+          opacity: focused ? 1 : 0,
+          marginLeft: focused ? 6 : 0,
+        }}
+        transition={{ type: "timing", duration: 200 }}
+        style={{
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
+      >
+        <Text style={{ color: "white", fontSize: 14 }}>{label.text}</Text>
+      </MotiView>
+    </MotiView>
+  );
+}
+
+// ----------------------------------------------------
+// BOTÓN PERSONALIZADO PARA QUITAR RIPPLE/SHADOW
+// ----------------------------------------------------
+function CustomTabButton({ children, onPress }) {
+  return (
+    <TouchableOpacity
+      activeOpacity={1} // quita efecto de presionado gris
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      onPress={onPress}
+    >
+      {children}
+    </TouchableOpacity>
+  );
+}
+
+// ----------------------------------------------------
+// TABS PRINCIPALES
+// ----------------------------------------------------
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -51,90 +188,64 @@ function MainTabs() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 70,
-          marginTop: 1,
-          borderTopColor: "black",
-          backgroundColor: "#F9F7F3",
-          borderTopWidth: 2,
-          paddingTop: 5,
-          elevation: 10,
-          marginLeft: -5,
+          height: 65,
+          borderTopWidth: 1,
+          borderTopColor: "#ddd",
+          backgroundColor: "#fff",
+          elevation: 0, // Android
+          shadowOpacity: 0, // iOS
         },
+        tabBarButton: (props) => <CustomTabButton {...props} />, // sin ripple
         tabBarIcon: ({ focused }) => {
           let IconComponent;
           let iconName;
+          let textLabel;
 
           if (route.name === "Home") {
             IconComponent = Feather;
             iconName = "home";
-          } else if (route.name === "MaterialsStack") {
-            IconComponent = Octicons;
-            iconName = "checklist";
+            textLabel = "Home";
           } else if (route.name === "Sales") {
             IconComponent = MaterialIcons;
             iconName = "local-offer";
+            textLabel = "Sales";
           } else if (route.name === "StockStack") {
             IconComponent = MaterialIcons;
             iconName = "inventory";
+            textLabel = "Stock";
           }
 
-          if (focused) {
-            return (
-              <View
-                style={{
-                  flexDirection: "row",
-                  backgroundColor: "#A78A5E",
-                  paddingHorizontal: 11,
-                  paddingVertical: 1,
-                  borderRadius: 15,
-                  width: 100,
-                  height: 35,
-                  alignItems: "center",
-                }}
-              >
-                <IconComponent name={iconName} size={22} color="white" />
-                <Text style={{ color: "white", marginLeft: 6 }}>
-                  {route.name === "MaterialsStack"
-                    ? "Materials"
-                    : route.name === "StockStack"
-                    ? "Stock"
-                    : route.name}
-                </Text>
-              </View>
-            );
-          }
-
-          return <IconComponent name={iconName} size={22} color="black" />;
+          return (
+            <AnimatedTab
+              focused={focused}
+              icon={IconComponent}
+              label={{ iconName, text: textLabel }}
+            />
+          );
         },
       })}
     >
       <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="MaterialsStack" component={MaterialsStack} />
       <Tab.Screen name="Sales" component={Sales} />
       <Tab.Screen name="StockStack" component={StockStack} />
     </Tab.Navigator>
   );
 }
 
-// Stack para Login
-function LoginStack() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PhoneLogin" component={PhoneLogin} />
-      <Stack.Screen
-        name="CodeVerification"
-        component={CodeVerification}
-      />
-    </Stack.Navigator>
-  );
-}
-
-// Navegador principal
+// ----------------------------------------------------
+// NAVEGADOR PRINCIPAL
+// ----------------------------------------------------
 export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="LoginStack" component={LoginStack} />
+        {/* Splash inicial */}
+        <Stack.Screen name="Splash" component={SplashScreen} />
+
+        {/* Flujo de login (comentado) */}
+        {/* <Stack.Screen name="LoginStack" component={LoginStack} /> */}
+
+        {/* Tabs principales */}
         <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>

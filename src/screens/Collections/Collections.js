@@ -11,33 +11,33 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function Materials() {
-  const [materials, setMaterials] = useState([]);
+export default function Collections() {
+  const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 13;
-  const navigation = useNavigation();
   const [deletingId, setDeletingId] = useState(null);
+  const navigation = useNavigation();
 
-  // Traer materiales desde API
-  const fetchMaterials = async () => {
+  const fetchCollections = async () => {
     try {
       setLoading(true);
-      const res = await fetch("https://rose-candle-co.onrender.com/api/rawMaterials");
+      const res = await fetch("https://rose-candle-co.onrender.com/api/collections");
+      if (!res.ok) throw new Error("Error al obtener colecciones");
       const data = await res.json();
-      setMaterials(data);
+      setCollections(data);
     } catch (err) {
-      console.error("Error fetching materials:", err);
+      console.error("Error fetching collections:", err);
+      Alert.alert("Error", "No se pudo cargar colecciones");
     } finally {
       setLoading(false);
     }
   };
 
-  // Eliminar material con confirmación
   const handleDelete = (id) => {
     Alert.alert(
-      "Eliminar material",
-      "¿Estás seguro de que quieres eliminar este material?",
+      "Eliminar colección",
+      "¿Estás seguro de que quieres eliminar esta colección?",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -47,35 +47,19 @@ export default function Materials() {
             setDeletingId(id);
             try {
               const res = await fetch(
-                `https://rose-candle-co.onrender.com/api/rawMaterials/${id}`,
+                `https://rose-candle-co.onrender.com/api/collections/${id}`,
                 { method: "DELETE" }
               );
+              if (!res.ok) throw new Error("No se pudo eliminar colección");
 
-              let body;
-              try {
-                body = await res.json();
-              } catch (e) {
-                body = await res.text();
-              }
-
-              console.log("DELETE response:", res.status, body);
-
-              if (res.ok) {
-                // eliminar localmente optimista
-                setMaterials((prev) => prev.filter((m) => m._id !== id));
-                Alert.alert("Eliminado", "El material ha sido eliminado.");
-              } else {
-                const errMsg =
-                  (body && (body.message || body.error || JSON.stringify(body))) ||
-                  `Respuesta del servidor: ${res.status}`;
-                throw new Error(errMsg);
-              }
+              setCollections((prev) => prev.filter((c) => c._id !== id));
+              Alert.alert("Eliminado", "La colección ha sido eliminada.");
             } catch (err) {
-              console.error("Error eliminando material:", err);
-              Alert.alert("Error", err.message || "No se pudo eliminar el material");
+              console.error("Error eliminando colección:", err);
+              Alert.alert("Error", err.message);
             } finally {
               setDeletingId(null);
-              fetchMaterials(); // sincronizar
+              fetchCollections();
             }
           },
         },
@@ -84,17 +68,17 @@ export default function Materials() {
   };
 
   useEffect(() => {
-    fetchMaterials();
+    fetchCollections();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      fetchMaterials();
+      fetchCollections();
     }, [])
   );
 
-  const totalPages = Math.ceil(materials.length / itemsPerPage);
-  const paginatedData = materials.slice(
+  const totalPages = Math.ceil(collections.length / itemsPerPage);
+  const paginatedData = collections.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -110,15 +94,11 @@ export default function Materials() {
         {item.name}
       </Text>
 
-      <Text style={styles.qtyCell}>
-        {item.currentStock} {item.unit}
-      </Text>
-
       <View style={styles.actionsCell}>
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: "#5cb85c" }]}
           onPress={() =>
-            navigation.navigate("MaterialsDetails", { material: item })
+            navigation.navigate("CollectionsDetail", { collection: item })
           }
         >
           <MaterialIcons name="edit" size={18} color="#fff" />
@@ -127,9 +107,7 @@ export default function Materials() {
         <TouchableOpacity
           style={[
             styles.iconBtn,
-            {
-              backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f",
-            },
+            { backgroundColor: deletingId === item._id ? "#c94c43" : "#d9534f" },
           ]}
           onPress={() => handleDelete(item._id)}
           disabled={deletingId === item._id}
@@ -194,16 +172,13 @@ export default function Materials() {
 
   return (
     <View style={styles.container}>
-      {/* Header: título + botón Agregar */}
       <View style={styles.headerBox}>
-        <Text style={styles.header}>Materia Prima</Text>
-
-        {/* Botón Agregar — texto + color #26328dff y alineado con la tabla */}
+        <Text style={styles.header}>Colecciones</Text>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("MaterialsDetails", { material: null })}
+          onPress={() => navigation.navigate("CollectionsDetail", { collection: null })}
         >
-          <MaterialIcons name="add" size={18} color="#fff" />
+          <MaterialIcons name="add" size={20} color="#fff" />
           <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>
       </View>
@@ -211,10 +186,7 @@ export default function Materials() {
       <View style={styles.tableWrapper}>
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, { flex: 2 }]}>Materia</Text>
-            <Text style={[styles.headerText, { flex: 1, textAlign: "center" }]}>
-              Cantidad
-            </Text>
+            <Text style={[styles.headerText, { flex: 2 }]}>Colección</Text>
             <Text style={[styles.headerText, { width: 90, textAlign: "center" }]}>
               Acciones
             </Text>
@@ -236,8 +208,6 @@ export default function Materials() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#F9F7F3" },
-
-  // Alineado con la tabla usando marginHorizontal igual a tableWrapper
   headerBox: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -246,18 +216,16 @@ const styles = StyleSheet.create({
     marginTop: 60,
     marginHorizontal: 5,
   },
-  header: { fontSize: 20, fontWeight: "bold", color: "#333" },
-
+  header: { fontSize: 20, fontWeight: "bold", color: "#333", marginLeft: 10 },
   addButton: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#26328dff", // color pedido
-    paddingVertical: 6,
+    backgroundColor: "#26328dff",
+    paddingVertical: 5,
     paddingHorizontal: 12,
     borderRadius: 6,
+    alignItems: "center",
   },
-  addButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 6 },
-
+  addButtonText: { color: "#fff", fontSize: 14, marginLeft: 4 },
   tableWrapper: {
     flex: 1,
     marginHorizontal: 5,
@@ -287,7 +255,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f2f2f2",
   },
   nameCell: { flex: 2, fontSize: 14, color: "#333" },
-  qtyCell: { flex: 1, fontSize: 14, color: "#555", textAlign: "center" },
   actionsCell: {
     width: 90,
     flexDirection: "row",
@@ -299,7 +266,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 4,
   },
-
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
   pagination: {
     flexDirection: "row",

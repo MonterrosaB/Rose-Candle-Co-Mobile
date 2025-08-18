@@ -1,5 +1,5 @@
 // PhoneLoginScreen.js
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,17 +9,19 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import { useAuth } from "./AuthContext";
+
 import { useNavigation } from "@react-navigation/native";
 import loginPic from "../../../assets/login.png";
-import {auth, RecaptchaVerifier, signInWithPhoneNumber} from "../.././firebaseConfig";
-import { useNavigation } from "@react-navigation/native";
-
-
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { firebase, firebaseConfig } from "../../firebaseConfig";
 
 export default function PhoneLogin() {
-  const [phone, setPhone] = useState("");
-  const navigation = useNavigation();
+  const [phone, setPhone] = useState("+"); // 🔹 empieza con "+"
   const recaptchaVerifier = useRef(null);
+  const navigation = useNavigation();
+
+  const { setConfirmation } = useAuth();
 
   const handleContinue = async () => {
     if (!phone.startsWith("+")) {
@@ -28,51 +30,55 @@ export default function PhoneLogin() {
     }
 
     try {
-      const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-      });
-
-      const confirmation = await signInWithPhoneNumber(auth, phone, verifier);
-      navigation.navigate("CodeVerification", { confirmation });
-    } catch (error) {
-      alert(error.message);
+      const result = await firebase
+        .auth()
+        .signInWithPhoneNumber(phone, recaptchaVerifier.current);
+      setConfirmation(result);
+      navigation.navigate("CodeVerification");
+    } catch (err) {
+      console.log(err);
     }
   };
 
-  // Obtener ancho de la pantalla
   const { width } = Dimensions.get("window");
 
   return (
     <View style={styles.container}>
-    {/* Recaptcha */}
-    <FirebaseRecaptchaVerifierModal
-      ref={recaptchaVerifier}
-      firebaseConfig={firebaseConfig}
-    />
-
-    <Image
-      source={loginPic}
-      style={{ width, height: 370, resizeMode: "cover" }}
-    />
-
-    <View style={styles.content}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
-      <Text style={styles.label}>Número de teléfono</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="+50377778888"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
+      {/* Recaptcha */}
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={firebaseConfig}
       />
-      <Text style={styles.info}>
-        Recibirás un mensaje SMS con un código de verificación.
-      </Text>
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
-        <Text style={styles.buttonText}>Continuar</Text>
-      </TouchableOpacity>
+
+      <Image
+        source={loginPic}
+        style={{ width, height: 370, resizeMode: "cover" }}
+      />
+
+      <View style={styles.content}>
+        <Text style={styles.title}>Iniciar Sesión</Text>
+        <Text style={styles.label}>Número de teléfono</Text>
+        <TextInput
+          style={styles.input}
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={(text) => {
+            // 🔹 siempre mantener el "+"
+            if (!text.startsWith("+")) {
+              setPhone("+" + text.replace(/^\+/, ""));
+            } else {
+              setPhone(text);
+            }
+          }}
+        />
+        <Text style={styles.info}>
+          Recibirás un mensaje SMS con un código de verificación.
+        </Text>
+        <TouchableOpacity style={styles.button} onPress={handleContinue}>
+          <Text style={styles.buttonText}>Continuar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
   );
 }
 
@@ -82,16 +88,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 60,
   },
-  title: { fontSize: 40, 
+  title: {
+    fontSize: 40,
     fontFamily: "Lora",
-    fontWeight: "bold", 
-    marginBottom: 0
-   },
-  label: { fontSize: 20, 
     fontWeight: "bold",
-     marginBottom: 10,
-     marginTop: 40
-    },
+    marginBottom: 0,
+  },
+  label: { fontSize: 20, fontWeight: "bold", marginBottom: 10, marginTop: 40 },
   input: {
     borderWidth: 2,
     textAlign: "center",
