@@ -1,8 +1,24 @@
 import React, { useState, useContext, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native";
-import { AuthContext } from "../../context/AuthContext"; // Contexto de autenticación
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, Easing } from "react-native-reanimated";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  Easing,
+} from "react-native-reanimated";
+
+import { AuthContext } from "../../context/AuthContext"; // Contexto de autenticación
 
 const { width } = Dimensions.get("window"); // ancho de pantalla para animaciones
 
@@ -11,24 +27,30 @@ const UserLoginScreen = ({ navigation }) => {
 
   const [user, setUser] = useState("");       // nombre de usuario
   const [password, setPassword] = useState(""); // contraseña
+  const [loading, setLoading] = useState(false); // loader
 
   // Animaciones
   const slideAnim = useSharedValue(-width); // animación de entrada horizontal
-  const floatAnim = useSharedValue(0);     // animación flotante de personaje
+  const floatAnim = useSharedValue(0);      // animación flotante de personaje
 
   useEffect(() => {
-    // Si ya hay token, ir a la pantalla principal
     if (authToken) {
       navigation.replace("MainTabs");
     }
 
     // Animación de slide de entrada
-    slideAnim.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.exp) });
+    slideAnim.value = withTiming(0, {
+      duration: 800,
+      easing: Easing.out(Easing.exp),
+    });
 
     // Animación flotante repetida
     floatAnim.value = withRepeat(
-      withTiming(-15, { duration: 2000, easing: Easing.inOut(Easing.sin) }),
-      -1, // infinitas veces
+      withTiming(-15, {
+        duration: 2000,
+        easing: Easing.inOut(Easing.sin),
+      }),
+      -1, // infinito
       true // alternar dirección
     );
   }, [authToken]);
@@ -42,25 +64,42 @@ const UserLoginScreen = ({ navigation }) => {
     transform: [{ translateY: floatAnim.value }],
   }));
 
-  // Función para login
+  // Función para login con loader visible
   const handleLogin = async () => {
-    const success = await login(user, password);
-    if (success) {
-      navigation.replace("MainTabs"); // redirigir si login es exitoso
+    if (loading) return; // prevenir dobles pulsaciones
+    setLoading(true);
+
+    // pequeño delay para asegurar que el loader renderiza
+    await new Promise((res) => setTimeout(res, 50));
+
+    try {
+      const success = await login(user, password);
+
+      if (success) {
+        navigation.replace("MainTabs");
+      } else {
+        // Aquí podrías mostrar un Alert con error si quieres
+      }
+    } catch (e) {
+      console.warn("Login error:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      
       {/* Botón para regresar */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        disabled={loading}
+      >
         <MaterialIcons name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
 
       {/* Contenedor principal con animación de slide */}
       <Animated.View style={[styles.contentWrapper, slideStyle]}>
-        
         {/* Encabezado */}
         <View style={styles.header}>
           <Text style={styles.title}>Iniciar Sesión</Text>
@@ -69,10 +108,14 @@ const UserLoginScreen = ({ navigation }) => {
 
         {/* Formulario */}
         <View style={styles.form}>
-        
           {/* Input de usuario */}
           <View style={styles.inputContainer}>
-            <FontAwesome name="user" size={20} color="#888" style={{ marginRight: 10 }} />
+            <FontAwesome
+              name="user"
+              size={20}
+              color="#888"
+              style={{ marginRight: 10 }}
+            />
             <TextInput
               style={styles.input}
               placeholder="Usuario"
@@ -80,12 +123,18 @@ const UserLoginScreen = ({ navigation }) => {
               onChangeText={setUser}
               autoCapitalize="none"
               placeholderTextColor="#888"
+              editable={!loading}
             />
           </View>
 
           {/* Input de contraseña */}
           <View style={styles.inputContainer}>
-            <MaterialIcons name="lock" size={20} color="#888" style={{ marginRight: 10 }} />
+            <MaterialIcons
+              name="lock"
+              size={20}
+              color="#888"
+              style={{ marginRight: 10 }}
+            />
             <TextInput
               style={styles.input}
               placeholder="Contraseña"
@@ -93,17 +142,33 @@ const UserLoginScreen = ({ navigation }) => {
               onChangeText={setPassword}
               secureTextEntry
               placeholderTextColor="#888"
+              editable={!loading}
             />
           </View>
 
           {/* Olvidé mi contraseña */}
-          <TouchableOpacity style={styles.forgotButton}>
+          <TouchableOpacity style={styles.forgotButton} disabled={loading}>
             <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
           </TouchableOpacity>
 
           {/* Botón de login */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginText}>Ingresar</Text>
+          <TouchableOpacity
+            style={[styles.loginButton, loading && { opacity: 0.9 }]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <ActivityIndicator
+                  size="small"
+                  color="#000"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.loginText}>Ingresando...</Text>
+              </View>
+            ) : (
+              <Text style={styles.loginText}>Ingresar</Text>
+            )}
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -122,7 +187,6 @@ const UserLoginScreen = ({ navigation }) => {
 
 export default UserLoginScreen;
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -192,6 +256,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 20,
   },
   loginText: {
     fontSize: 16,
@@ -206,6 +271,6 @@ const styles = StyleSheet.create({
   },
   characterImage: {
     width: width * 1.6,
-    height: width * 0.9
+    height: width * 0.9,
   },
 });

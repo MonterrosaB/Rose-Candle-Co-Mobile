@@ -8,21 +8,13 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { firebaseConfig } from '../../../firebaseConfig';
-
 import loginPic from '../../../../assets/login1.png'; 
 
-export default function PhoneLoginUI({ phone, setPhone, recaptchaVerifier, handleContinue }) {
+export default function PhoneLoginUI({ phone, setPhone, handleContinue }) {
   const { width } = Dimensions.get('window');
 
   return (
     <View style={styles.container}>
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={firebaseConfig}
-      />
-
       <Image
         source={loginPic}
         style={{ width, height: 370, resizeMode: 'cover' }}

@@ -1,12 +1,11 @@
 import { useState, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { firebase } from '../../../firebaseConfig';
 import { useAuth } from '../../../context/AuthContext';
 
 export default function usePhoneAuth() {
   const [phone, setPhone] = useState('+');
   const [code, setCode] = useState('');
-  const recaptchaVerifier = useRef(null);
+  const recaptchaVerifier = useRef(null); // ya no se usa, pero lo dejamos por compatibilidad con la UI
   const { setConfirmation, confirmation } = useAuth();
   const navigation = useNavigation();
 
@@ -17,11 +16,9 @@ export default function usePhoneAuth() {
     }
 
     try {
-      const result = await firebase
-        .auth()
-        .signInWithPhoneNumber(phone, recaptchaVerifier.current);
-
-      setConfirmation(result);
+      // Simulación: normalmente aquí iría la API para enviar el SMS
+      console.log(`Simulando envío de SMS a ${phone}`);
+      setConfirmation({ fake: true }); // marcamos como "confirmación iniciada"
       navigation.navigate('CodeVerification');
     } catch (err) {
       console.log('sendSMS error', err);
@@ -36,9 +33,13 @@ export default function usePhoneAuth() {
     }
 
     try {
-      await confirmation.confirm(code);
-      // si quieres, podrías setear user en el contexto via onAuthStateChanged
-      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      // Simulación: normalmente aquí verificarías el código recibido
+      if (code.length === 6) {
+        console.log(`Código ${code} verificado correctamente`);
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      } else {
+        throw new Error('Código inválido');
+      }
     } catch (error) {
       console.log('confirmCode error', error);
       alert('Código incorrecto o expirado');
@@ -56,7 +57,7 @@ export default function usePhoneAuth() {
   return {
     phone,
     setPhone: onChangePhone,
-    recaptchaVerifier,
+    recaptchaVerifier, // no hace nada, pero no rompe la UI existente
     handleContinue,
     code,
     setCode,

@@ -63,8 +63,8 @@ import { Feather } from "@expo/vector-icons";
 import { Octicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 
-// Moti para animaciones
-import { MotiView } from "moti";
+//  para animaciones
+import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 
 // ----------------------------------------------------
 // Navegadores
@@ -152,43 +152,34 @@ function AnimatedTab({ focused, icon: IconComponent, label, index, totalTabs }) 
   if (index === 0) extraPadding = 10; // primer tab
   if (index === totalTabs - 1) extraPadding = 10; // último tab
 
+  const containerStyle = useAnimatedStyle(() => ({
+    width: withTiming(focused ? expandedWidth : baseWidth, { duration: 200 }),
+    backgroundColor: withTiming(focused ? "#A78A5E" : "transparent", { duration: 200 }),
+    borderRadius: 20,
+    paddingHorizontal: 10 + extraPadding,
+    paddingVertical: 6,
+    height: 40,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: focused ? "flex-start" : "center",
+  }));
+
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(focused ? 1 : 0, { duration: 200 }),
+    marginLeft: withTiming(focused ? 6 : 0, { duration: 200 }),
+  }));
+
   return (
-    <MotiView
-      animate={{
-        width: focused ? expandedWidth : baseWidth,
-        backgroundColor: focused ? "#A78A5E" : "transparent",
-        borderRadius: 20,
-        paddingHorizontal: 10 + extraPadding, // agregamos padding extra
-        paddingVertical: 6,
-      }}
-      transition={{ type: "timing", duration: 200 }}
-      style={{
-        height: 40,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: focused ? "flex-start" : "center",
-      }}
-    >
+    <Animated.View style={containerStyle}>
       <IconComponent
         name={label.iconName}
         size={22}
         color={focused ? "white" : "black"}
       />
-
-      <MotiView
-        animate={{
-          opacity: focused ? 1 : 0,
-          marginLeft: focused ? 6 : 0,
-        }}
-        transition={{ type: "timing", duration: 200 }}
-        style={{
-          overflow: "hidden",
-          flexShrink: 0,
-        }}
-      >
+      <Animated.View style={[textStyle, { overflow: "hidden", flexShrink: 0 }]}>
         <Text style={{ color: "white", fontSize: 11 }}>{label.text}</Text>
-      </MotiView>
-    </MotiView>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
