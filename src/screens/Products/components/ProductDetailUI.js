@@ -1,4 +1,3 @@
-// ProductDetailUI.jsx
 import React from "react";
 import {
   ScrollView,
@@ -19,21 +18,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export function ProductDetailUI({
   categories = [],
   collections = [],
+  rawMaterials = [],
   formData,
-  imageUrl,
   pickImage,
+  removeImage,
   updateField,
   updateArrayItem,
   addArrayItem,
   removeArrayItem,
+  updateVariantComponent,
+  addArrayItemToVariant,
   handleSave,
+  handleDelete, // 👈 nuevo handler para eliminar
   goBack,
   isNew = false,
   saving = false,
-  isFormValid = false,
 }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top','bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top", "bottom"]}>
       <View style={[styles.header, { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }]}>
         <TouchableOpacity onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -43,10 +45,20 @@ export function ProductDetailUI({
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity onPress={pickImage}>
-          <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
-          <Text style={styles.touchText}>Tocar para cambiar imagen</Text>
-        </TouchableOpacity>
+        <Text style={styles.section}>Imágenes</Text>
+        <ScrollView horizontal>
+          {formData.images.map((uri, index) => (
+            <View key={index} style={{ marginRight: 10, alignItems: "center" }}>
+              <Image source={{ uri }} style={styles.imageSmall} />
+              <TouchableOpacity onPress={() => removeImage(index)}>
+                <Text style={styles.deleteBtn}>Eliminar</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TouchableOpacity style={styles.addBtn} onPress={pickImage}>
+            <Text style={styles.addText}>+ Añadir Imagen</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
         <Text style={styles.label}>Nombre</Text>
         <TextInput
@@ -73,7 +85,7 @@ export function ProductDetailUI({
 
         <Text style={styles.label}>Categoría</Text>
         <Picker
-          selectedValue={typeof formData.idProductCategory === "object" ? formData.idProductCategory._id : formData.idProductCategory}
+          selectedValue={formData.idProductCategory}
           onValueChange={(val) => updateField("idProductCategory", val)}
         >
           <Picker.Item label="-- Seleccionar categoría --" value="" />
@@ -84,7 +96,7 @@ export function ProductDetailUI({
 
         <Text style={styles.label}>Colección</Text>
         <Picker
-          selectedValue={typeof formData.idCollection === "object" ? formData.idCollection._id : formData.idCollection}
+          selectedValue={formData.idCollection}
           onValueChange={(val) => updateField("idCollection", val)}
         >
           <Picker.Item label="-- Seleccionar colección --" value="" />
@@ -93,77 +105,117 @@ export function ProductDetailUI({
           ))}
         </Picker>
 
-        <Text style={styles.section}>Variantes</Text>
-        {Array.isArray(formData.variant) && formData.variant.map((v, i) => (
+        <Text style={styles.section}>Receta</Text>
+        {formData.recipe.map((r, i) => (
           <View key={i} style={styles.arrayItem}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
+              value={r.step}
+              placeholder="Paso"
+              onChangeText={(text) => updateArrayItem("recipe", i, "step", text)}
+            />
+            <TouchableOpacity onPress={() => removeArrayItem("recipe", i)}>
+              <Text style={styles.deleteBtn}>X</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity style={styles.addBtn} onPress={() => addArrayItem("recipe", { step: "" })}>
+          <Text style={styles.addText}>+ Añadir Paso</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.section}>Instrucciones de Uso</Text>
+        {formData.useForm.map((u, i) => (
+          <View key={i} style={styles.arrayItem}>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              value={u.step || ""}
+              placeholder="Instrucción"
+              onChangeText={(text) => updateArrayItem("useForm", i, "step", text)}
+            />
+            <TouchableOpacity onPress={() => removeArrayItem("useForm", i)}>
+              <Text style={styles.deleteBtn}>X</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity style={styles.addBtn} onPress={() => addArrayItem("useForm", { step: "" })}>
+          <Text style={styles.addText}>+ Añadir Instrucción</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.section}>Variantes</Text>
+        {formData.variant.map((v, i) => (
+          <View key={i} style={{ marginBottom: 10, padding: 10, borderWidth: 1, borderColor: "#ccc", borderRadius: 8 }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre Variante"
               value={v.variant}
-              placeholder="Nombre"
               onChangeText={(text) => updateArrayItem("variant", i, "variant", text)}
             />
             <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={String(v.variantPrice ?? "")}
+              style={styles.input}
               placeholder="Precio"
               keyboardType="numeric"
-              onChangeText={(text) => {
-                const parsed = text === "" ? "" : Number(text);
-                updateArrayItem("variant", i, "variantPrice", parsed);
-              }}
+              value={v.variantPrice != null ? String(v.variantPrice) : ""}
+              onChangeText={(text) => updateArrayItem("variant", i, "variantPrice", text === "" ? null : Number(text))}
             />
-            <TouchableOpacity onPress={() => removeArrayItem("variant", i)}>
-              <Text style={styles.deleteBtn}>X</Text>
+
+            <Text style={{ fontWeight: "bold", marginTop: 5 }}>Componentes de la Variante</Text>
+            {v.components?.map((c, j) => (
+              <View key={j} style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+                <Picker
+                  style={{ flex: 2 }}
+                  selectedValue={c.idComponent}
+                  onValueChange={(val) => updateVariantComponent(i, j, "idComponent", val)}
+                >
+                  <Picker.Item label="-- Seleccionar Componente --" value="" />
+                  {rawMaterials.map((rm) => (
+                    <Picker.Item key={rm._id} label={rm.name} value={rm._id} />
+                  ))}
+                </Picker>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  value={c.amount != null ? String(c.amount) : ""}
+                  placeholder="Cantidad"
+                  keyboardType="numeric"
+                  onChangeText={(text) => updateVariantComponent(i, j, "amount", text === "" ? "" : Number(text))}
+                />
+              </View>
+            ))}
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() => addArrayItemToVariant(i, { idComponent: "", name: "", amount: 0 })}
+            >
+              <Text style={styles.addText}>+ Añadir Componente a Variante</Text>
             </TouchableOpacity>
           </View>
         ))}
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => addArrayItem("variant", { variant: "", variantPrice: 0, components: [] })}
+          onPress={() => addArrayItem("variant", { variant: "", variantPrice: null, components: [] })}
         >
           <Text style={styles.addText}>+ Añadir Variante</Text>
         </TouchableOpacity>
 
-        <Text style={styles.section}>Componentes</Text>
-        {Array.isArray(formData.components) && formData.components.map((c, i) => (
-          <View key={i} style={styles.arrayItem}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={typeof c.idComponent === "object" ? c.idComponent._id : c.idComponent}
-              placeholder="ID Componente"
-              onChangeText={(text) => updateArrayItem("components", i, "idComponent", text)}
-            />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={String(c.amount ?? "")}
-              placeholder="Cantidad"
-              keyboardType="numeric"
-              onChangeText={(text) => {
-                const parsed = text === "" ? "" : Number(text);
-                updateArrayItem("components", i, "amount", parsed);
-              }}
-            />
-            <TouchableOpacity onPress={() => removeArrayItem("components", i)}>
-              <Text style={styles.deleteBtn}>X</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
+        {/* Botón Guardar */}
         <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => addArrayItem("components", { idComponent: "", amount: 0 })}
-        >
-          <Text style={styles.addText}>+ Añadir Componente</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.saveButton, (!isFormValid || saving) && { opacity: 0.6 }]}
-          disabled={!isFormValid || saving}
+          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          disabled={saving}
           onPress={handleSave}
         >
           <Text style={styles.saveText}>
             {isNew ? (saving ? "Creando..." : "Crear Producto") : (saving ? "Guardando..." : "Guardar Cambios")}
           </Text>
         </TouchableOpacity>
+
+        {/* Botón Eliminar solo si NO es nuevo */}
+        {!isNew && (
+          <TouchableOpacity
+            style={[styles.deleteButton, saving && { opacity: 0.6 }]}
+            disabled={saving}
+            onPress={handleDelete}
+          >
+            <Text style={styles.deleteText}>Eliminar Producto</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -181,41 +233,18 @@ const styles = StyleSheet.create({
     borderBottomColor: "#ddd",
   },
   headerTitle: { fontSize: 18, fontWeight: "bold", textAlign: "center" },
-  scrollContent: { padding: 15, paddingTop: 30, paddingBottom: 40 },
-  image: { width: "100%", height: 220, borderRadius: 10, marginBottom: 10 },
-  touchText: { textAlign: "center", marginBottom: 15, color: "#666" },
+  scrollContent: { padding: 15, paddingBottom: 40 },
+  imageSmall: { width: 100, height: 100, borderRadius: 8, marginBottom: 5 },
   label: { fontWeight: "bold", marginTop: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginVertical: 5,
-  },
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 10,
-  },
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginVertical: 5 },
+  switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 10 },
   section: { fontWeight: "bold", fontSize: 16, marginTop: 20, marginBottom: 5 },
   arrayItem: { flexDirection: "row", alignItems: "center", marginBottom: 5 },
-  deleteBtn: { color: "red", fontSize: 18, marginLeft: 10 },
-  addBtn: {
-    backgroundColor: "#eee",
-    padding: 8,
-    borderRadius: 5,
-    alignItems: "center",
-    marginVertical: 8,
-  },
-  addText: { color: "#333" },
-  saveButton: {
-    backgroundColor: "#A78A5E",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 30,
-    marginBottom: 30,
-  },
-  saveText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  deleteBtn: { color: "red", fontSize: 16, marginLeft: 8 },
+  addBtn: { backgroundColor: "#007bff", padding: 10, borderRadius: 8, marginTop: 5, alignItems: "center" },
+  addText: { color: "#fff", fontWeight: "bold" },
+  saveButton: { backgroundColor: "#28a745", padding: 15, borderRadius: 8, marginTop: 20, alignItems: "center" },
+  saveText: { color: "#fff", fontWeight: "bold" },
+  deleteButton: { backgroundColor: "#dc3545", padding: 15, borderRadius: 8, marginTop: 10, alignItems: "center" },
+  deleteText: { color: "#fff", fontWeight: "bold" },
 });

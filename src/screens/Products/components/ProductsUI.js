@@ -63,11 +63,12 @@ export function ProductsUI({ products = [], loading }) {
       <View style={styles.header}>
         <Text style={styles.title}>Productos</Text>
         <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => console.log("Agregar producto")}
-        >
-          <Text style={styles.addButtonText}>Agregar</Text>
-        </TouchableOpacity>
+  style={styles.addButton}
+  onPress={() => navigation.navigate("ProductDetail", { product: null })}
+>
+  <Text style={styles.addButtonText}>Agregar</Text>
+</TouchableOpacity>
+
       </View>
 
       <FlatList

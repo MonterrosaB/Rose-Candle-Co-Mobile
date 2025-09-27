@@ -1,295 +1,276 @@
-// useProductDetail.js
 import { useState, useEffect } from "react";
+import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Alert, Platform } from "react-native";
+import axios from "axios";
 
-/**
- * Hook para pantalla de detalle/edición/creación de producto.
- * Normaliza tipos y prepara payload compatible con el backend.
- */
+export const useProductDetail = (product, navigation) => {
+  const API = "https://rose-candle-co.onrender.com/api/products";
+  const API_CATEGORIES = "https://rose-candle-co.onrender.com/api/productCategories";
+  const API_COLLECTIONS = "https://rose-candle-co.onrender.com/api/collections";
+  const API_RAW = "https://rose-candle-co.onrender.com/api/rawMaterials";
 
-function normalizeUriForForm(uri) {
-  if (!uri) return uri;
-  if (Platform.OS === "android") return uri;
-  return uri.replace("file://", "");
-}
-
-function safeParseJSON(val) {
-  if (val === undefined || val === null) return val;
-  if (typeof val !== "string") return val;
-  try {
-    return JSON.parse(val);
-  } catch (e) {
-    return null;
-  }
-}
-
-export function useProductDetail(product = null, navigation, isNewFlag = false) {
-  const isNew = isNewFlag || !product || !product._id;
-
-  const [categories, setCategories] = useState([]);
-  const [collections, setCollections] = useState([]);
-  const [newImage, setNewImage] = useState(null);
-  const [saving, setSaving] = useState(false);
-
-  const emptyForm = {
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
-    availability: true,
-    variant: [],
-    components: [],
+    images: [],
     recipe: [],
     useForm: [],
+    variant: [],
+    availability: true,
     idProductCategory: "",
     idCollection: "",
-  };
+  });
+  const [categories, setCategories] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [rawMaterials, setRawMaterials] = useState([]);
+  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState(
-    isNew
-      ? emptyForm
-      : {
-          name: product?.name || "",
-          description: product?.description || "",
-          availability: Boolean(product?.availability),
-          variant: Array.isArray(product?.variant) ? product.variant : [],
-          components: Array.isArray(product?.components) ? product.components : [],
-          recipe: Array.isArray(product?.recipe) ? product.recipe : [],
-          useForm: Array.isArray(product?.useForm) ? product.useForm : [],
-          idProductCategory: product?.idProductCategory?._id || product?.idProductCategory || "",
-          idCollection: product?.idCollection?._id || product?.idCollection || "",
-        }
-  );
-
-  const imageUrl =
-    newImage?.uri ||
-    (Array.isArray(product?.images) ? product.images[0] : product?.images) ||
-    "https://via.placeholder.com/600x400.png?text=Sin+imagen";
-
+  // Traer categorías, colecciones y materias primas
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resCat = await fetch("https://rose-candle-co.onrender.com/api/productCategories");
-        const txtCat = await resCat.text();
-        try {
-          const dataCat = JSON.parse(txtCat);
-          setCategories(Array.isArray(dataCat) ? dataCat : []);
-        } catch {
-          setCategories([]);
-        }
-
-        const resCol = await fetch("https://rose-candle-co.onrender.com/api/collections");
-        const txtCol = await resCol.text();
-        try {
-          const dataCol = JSON.parse(txtCol);
-          setCollections(Array.isArray(dataCol) ? dataCol : []);
-        } catch {
-          setCollections([]);
-        }
+        const [catsRes, colsRes, rawRes] = await Promise.all([
+          axios.get(API_CATEGORIES),
+          axios.get(API_COLLECTIONS),
+          axios.get(API_RAW),
+        ]);
+        setCategories(catsRes.data || []);
+        setCollections(colsRes.data || []);
+        setRawMaterials(rawRes.data || []);
       } catch (err) {
-        console.error("Error cargando categorías/colecciones:", err);
+        console.error("Error cargando datos:", err.message);
       }
     };
-
     fetchData();
   }, []);
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaType.Images,
-        allowsEditing: true,
-        quality: 0.8,
-      });
+  // Cargar datos del producto si existe
+  useEffect(() => {
+    if (product) {
+      const variants = (product.variant || []).map((v) => ({
+        ...v,
+        components: (v.components || []).map((c) => ({
+          idComponent: c.idComponent?._id || c.idComponent || "",
+          name: c.idComponent?.name || c.name || "",
+          amount: c.amount || 0,
+        })),
+      }));
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setNewImage(result.assets[0]);
-      }
-    } catch (e) {
-      console.error("Error al seleccionar imagen:", e);
+      setFormData({
+        name: product.name || "",
+        description: product.description || "",
+        images: product.images || [],
+        recipe: (product.recipe || []).map((r) => ({ step: r.step || "" })),
+        useForm: (product.useForm || []).map((u) => ({ step: u.instruction || "" })),
+        variant: variants,
+        availability: product.availability ?? true,
+        idProductCategory: product.idProductCategory?._id || product.idProductCategory || "",
+        idCollection: product.idCollection?._id || product.idCollection || "",
+      });
     }
-  };
+  }, [product]);
 
   const updateField = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateArrayItem = (field, index, key, value) => {
-    const updated = Array.isArray(formData[field]) ? [...formData[field]] : [];
-    if (!updated[index]) return;
-    updated[index] = { ...updated[index], [key]: value };
-    setFormData((prev) => ({ ...prev, [field]: updated }));
+  const updateArrayItem = (arrayName, index, key, value) => {
+    setFormData((prev) => {
+      const copy = [...prev[arrayName]];
+      copy[index] = { ...copy[index], [key]: value };
+      return { ...prev, [arrayName]: copy };
+    });
   };
 
-  const addArrayItem = (field, item) => {
-    setFormData((prev) => ({ ...prev, [field]: [...(prev[field] || []), item] }));
+  const addArrayItem = (arrayName, item) => {
+    setFormData((prev) => ({ ...prev, [arrayName]: [...prev[arrayName], item] }));
   };
 
-  const removeArrayItem = (field, index) => {
-    const updated = Array.isArray(formData[field]) ? [...formData[field]] : [];
-    updated.splice(index, 1);
-    setFormData((prev) => ({ ...prev, [field]: updated }));
+  const removeArrayItem = (arrayName, index) => {
+    setFormData((prev) => ({
+      ...prev,
+      [arrayName]: prev[arrayName].filter((_, i) => i !== index),
+    }));
   };
 
-  const isFormValid = () => {
-    return (
-      formData.name && formData.name.trim().length >= 3 &&
-      formData.description && formData.description.trim().length >= 5 &&
-      !!formData.idProductCategory &&
-      Array.isArray(formData.variant) && formData.variant.length > 0
-    );
+  const updateVariantComponent = (variantIndex, componentIndex, key, value) => {
+    setFormData((prev) => {
+      const newVariants = [...prev.variant];
+      const newComponents = [...(newVariants[variantIndex].components || [])];
+
+      if (key === "idComponent") {
+        const selectedRaw = rawMaterials.find((r) => r._id === value);
+        newComponents[componentIndex] = {
+          ...newComponents[componentIndex],
+          idComponent: selectedRaw?._id || "",
+          name: selectedRaw?.name || "",
+        };
+      } else {
+        newComponents[componentIndex] = { ...newComponents[componentIndex], [key]: value };
+      }
+
+      newVariants[variantIndex] = { ...newVariants[variantIndex], components: newComponents };
+      return { ...prev, variant: newVariants };
+    });
   };
 
-  const normalizePayloadForSend = () => {
-    const payload = { ...formData };
+  const addArrayItemToVariant = (variantIndex, item) => {
+    setFormData((prev) => {
+      const newVariants = [...prev.variant];
+      newVariants[variantIndex].components = [
+        ...(newVariants[variantIndex].components || []),
+        item,
+      ];
+      return { ...prev, variant: newVariants };
+    });
+  };
 
-    // Variantes
-    payload.variant = Array.isArray(payload.variant)
-      ? payload.variant.map((v) => ({
-          variant: v?.variant ?? "",
-          variantPrice: Number(v?.variantPrice) || 0,
-          components: Array.isArray(v.components)
-            ? v.components.map((c) => ({
-                idComponent: typeof c.idComponent === "object" ? c.idComponent._id : c.idComponent || "",
-                amount: Number(c.amount) || 0,
-              }))
-            : [],
-        }))
-      : [];
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        setFormData((prev) => ({ ...prev, images: [...prev.images, result.assets[0].uri] }));
+      }
+    } catch (err) {
+      console.error("Error al seleccionar imagen:", err);
+    }
+  };
 
-    // Components top-level
-    payload.components = Array.isArray(payload.components)
-      ? payload.components.map((c) => ({
-          idComponent: typeof c.idComponent === "object" ? c.idComponent._id : c.idComponent || "",
-          amount: Number(c.amount) || 0,
-        }))
-      : [];
-
-    // Recipe y useForm
-    payload.recipe = Array.isArray(payload.recipe)
-      ? payload.recipe.map((r) => (typeof r === "string" ? { step: r } : r))
-      : [];
-
-    payload.useForm = Array.isArray(payload.useForm)
-      ? payload.useForm.map((u) => (typeof u === "string" ? { instruction: u } : u))
-      : [];
-
-    // Availability
-    payload.availability = payload.availability ? "true" : "false";
-
-    // Solo enviar ID para categoría y colección
-    payload.idProductCategory = typeof payload.idProductCategory === "object"
-      ? payload.idProductCategory._id
-      : payload.idProductCategory;
-
-    payload.idCollection = typeof payload.idCollection === "object"
-      ? payload.idCollection._id
-      : payload.idCollection;
-
-    return payload;
+  const removeImage = (index) => {
+    setFormData((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
   };
 
   const handleSave = async () => {
-    if (!isFormValid()) {
-      Alert.alert("Formulario incompleto", "Completa nombre, descripción, categoría y al menos una variante.");
-      return;
-    }
-
-    setSaving(true);
     try {
-      const payload = normalizePayloadForSend();
+      const missingFields = [];
+      if (!formData.name.trim()) missingFields.push("Nombre");
+      if (!formData.description.trim()) missingFields.push("Descripción");
+      if (!formData.idProductCategory) missingFields.push("Categoría");
 
-      let response;
-      if (newImage) {
-        const form = new FormData();
-        form.append("name", payload.name);
-        form.append("description", payload.description);
-        form.append("availability", payload.availability);
-        form.append("idProductCategory", payload.idProductCategory);
-        form.append("idCollection", payload.idCollection);
-        form.append("variant", JSON.stringify(payload.variant));
-        form.append("components", JSON.stringify(payload.components));
-        form.append("recipe", JSON.stringify(payload.recipe));
-        form.append("useForm", JSON.stringify(payload.useForm));
+      const validVariants = formData.variant.filter(
+        (v) =>
+          v.variant &&
+          v.variant.trim() !== "" &&
+          v.variantPrice != null &&
+          Array.isArray(v.components) &&
+          v.components.every((c) => c.idComponent && c.amount > 0)
+      );
 
-        const uri = normalizeUriForForm(newImage.uri);
-        form.append("images", {
-          uri,
-          name: newImage.fileName || "product.jpg",
-          type: newImage.type || "image/jpeg",
+      if (validVariants.length === 0) missingFields.push("Variantes");
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          "Campos faltantes",
+          `Por favor completa los siguientes campos:\n${missingFields.join(", ")}`
+        );
+        return;
+      }
+
+      setSaving(true);
+
+      const validRecipe = formData.recipe.filter((r) => r.step && r.step.trim() !== "");
+      const validUseForm = formData.useForm.filter((u) => u.step && u.step.trim() !== "");
+
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("description", formData.description);
+      data.append("availability", formData.availability.toString());
+      data.append("idProductCategory", formData.idProductCategory);
+      data.append("idCollection", formData.idCollection);
+      data.append("variant", JSON.stringify(validVariants));
+      data.append("recipe", JSON.stringify(validRecipe));
+      data.append(
+        "useForm",
+        JSON.stringify(validUseForm.map((u) => ({ instruction: u.step })))
+      );
+
+      formData.images.forEach((uri, index) => {
+        if (!uri.startsWith("http")) {
+          data.append("images", {
+            uri,
+            name: `image_${index}.jpg`,
+            type: "image/jpeg",
+          });
+        }
+      });
+      const existingImages = formData.images.filter((uri) => uri.startsWith("http"));
+      data.append("imagesExisting", JSON.stringify(existingImages));
+
+      let res;
+      if (product) {
+        res = await axios.put(`${API}/${product._id}`, data, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-
-        if (isNew) {
-          response = await fetch("https://rose-candle-co.onrender.com/api/products", {
-            method: "POST",
-            body: form,
-          });
-        } else {
-          response = await fetch(`https://rose-candle-co.onrender.com/api/products/${product._id}`, {
-            method: "PUT",
-            body: form,
-          });
-        }
       } else {
-        const body = {
-          ...payload,
-          variant: JSON.stringify(payload.variant),
-          components: JSON.stringify(payload.components),
-          recipe: JSON.stringify(payload.recipe),
-          useForm: JSON.stringify(payload.useForm),
-          changedBy: "frontend",
-        };
-
-        if (isNew) {
-          response = await fetch("https://rose-candle-co.onrender.com/api/products", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-        } else {
-          response = await fetch(`https://rose-candle-co.onrender.com/api/products/${product._id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-        }
+        res = await axios.post(API, data, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
 
-      const text = await response.text();
-      let parsed;
-      try { parsed = JSON.parse(text); } catch { parsed = null; }
-
-      console.log("Status:", response.status);
-      console.log("Response:", parsed ?? text);
-
-      if (!response.ok) {
-        const msg = parsed?.message || parsed?.error || text || `Error ${response.status}`;
-        throw new Error(msg);
-      }
-
-      Alert.alert("Éxito", isNew ? "Producto creado correctamente" : "Producto actualizado correctamente");
+      Alert.alert("✅ Éxito", res.data.message || "Guardado correctamente");
       navigation.goBack();
     } catch (error) {
-      console.error("save error:", error);
-      Alert.alert("Error", String(error.message || "No se pudo guardar el producto"));
+      console.error(error.response?.data || error.message);
+      Alert.alert(
+        "❌ Error",
+        error.response?.data?.message || "No se pudo guardar el producto"
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const handleDelete = async () => {
+    if (!product?._id) return;
+
+    Alert.alert(
+      "Confirmar eliminación",
+      "¿Estás seguro que quieres eliminar este producto?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setSaving(true);
+              await axios.delete(`${API}/${product._id}`);
+              Alert.alert("✅ Éxito", "Producto eliminado correctamente");
+              navigation.goBack();
+            } catch (error) {
+              console.error(error.response?.data || error.message);
+              Alert.alert("❌ Error", error.response?.data?.message || "No se pudo eliminar");
+            } finally {
+              setSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return {
+    formData,
+    saving,
     categories,
     collections,
-    formData,
-    imageUrl,
-    pickImage,
+    rawMaterials,
     updateField,
     updateArrayItem,
     addArrayItem,
     removeArrayItem,
+    updateVariantComponent,
+    addArrayItemToVariant,
+    pickImage,
+    removeImage,
     handleSave,
+    handleDelete,
     goBack: () => navigation.goBack(),
-    isNew,
-    saving,
-    isFormValid: isFormValid(),
+    isNew: !product,
+    isFormValid: !!formData.name && !!formData.description && !!formData.idProductCategory,
   };
-}
+};
