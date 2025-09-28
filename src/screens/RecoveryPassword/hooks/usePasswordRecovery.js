@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "react-native-toast-message"; // si usas react-native-toast-message
 
-export const usePasswordRecovery = (API) => {
+// URL base de tu API
+const API = "https://rose-candle-co-1.onrender.com/api";
+
+export const usePasswordRecovery = () => {
   const [step, setStep] = useState(1);
   const [userEmail, setUserEmail] = useState("");
+  const [token, setToken] = useState(""); // <-- token para enviar en cada request
   const [loading, setLoading] = useState({
     request: false,
     verify: false,
@@ -13,89 +16,90 @@ export const usePasswordRecovery = (API) => {
   });
   const [message, setMessage] = useState("");
 
-  const { register, handleSubmit, reset, setValue, getValues, watch, formState } = useForm();
+  const { control, handleSubmit, reset, setValue, watch } = useForm();
 
-  // Solicitar código
+  // --- Solicitar código ---
   const requestCode = async ({ email }) => {
-    setLoading((prev) => ({ ...prev, request: true }));
+    setLoading(prev => ({ ...prev, request: true }));
     try {
       const res = await fetch(`${API}/recoveryPassword/requestCode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
-        credentials: "include",
       });
       const data = await res.json();
-      if (res.ok) {
+
+      if (res.status === 200 && data.token) {
+        setToken(data.token);
         setMessage("Código enviado al correo.");
-        toast.show({ type: "success", text1: "Código enviado al correo" });
         return true;
       } else {
         setMessage(data.message || "No se pudo enviar el código");
-        toast.show({ type: "error", text1: data.message || "No se pudo enviar el código" });
         return false;
       }
     } catch (err) {
       setMessage("Error del servidor.");
-      toast.show({ type: "error", text1: "Error del servidor" });
       return false;
     } finally {
-      setLoading((prev) => ({ ...prev, request: false }));
+      setLoading(prev => ({ ...prev, request: false }));
     }
   };
 
-  // Verificar código
+  // --- Verificar código ---
   const verifyCode = async ({ code }) => {
-    setLoading((prev) => ({ ...prev, verify: true }));
+    setLoading(prev => ({ ...prev, verify: true }));
     try {
       const res = await fetch(`${API}/recoveryPassword/verifyCode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-        credentials: "include",
+        body: JSON.stringify({ code, token }),
       });
       const data = await res.json();
-      if (res.ok && data.message === "Code verified successfully") {
-        toast.show({ type: "success", text1: "Código verificado" });
+
+      if (res.status === 200 && data.token) {
+        setToken(data.token);
+        setMessage("Código verificado");
         return true;
       } else {
-        toast.show({ type: "error", text1: data.message || "Código inválido" });
+        setMessage(data.message || "Código inválido");
         return false;
       }
     } catch (err) {
-      toast.show({ type: "error", text1: "Error al verificar el código" });
+      setMessage("Error al verificar el código");
       return false;
     } finally {
-      setLoading((prev) => ({ ...prev, verify: false }));
+      setLoading(prev => ({ ...prev, verify: false }));
     }
   };
 
-  // Actualizar contraseña
+  // --- Actualizar contraseña ---
   const updatePassword = async ({ newPassword }) => {
-    setLoading((prev) => ({ ...prev, update: true }));
+    setLoading(prev => ({ ...prev, update: true }));
     try {
       const res = await fetch(`${API}/recoveryPassword/newPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword }),
-        credentials: "include",
+        body: JSON.stringify({ newPassword, token }),
       });
       const data = await res.json();
-      if (res.ok && data.message === "Password updated") {
-        toast.show({ type: "success", text1: "Contraseña actualizada" });
+
+      if (res.status === 200) {
+        setMessage("Contraseña actualizada");
+        setToken(""); // limpiar token
         return true;
       } else {
-        toast.show({ type: "error", text1: data.message || "No se pudo actualizar" });
+        setMessage(data.message || "No se pudo actualizar");
         return false;
       }
     } catch (err) {
-      toast.show({ type: "error", text1: "Error del servidor" });
+      setMessage("Error del servidor");
       return false;
     } finally {
-      setLoading((prev) => ({ ...prev, update: false }));
+      setLoading(prev => ({ ...prev, update: false }));
     }
   };
 
+  // --- Handlers ---
   const handleRequest = async (data) => {
     const success = await requestCode(data);
     if (success) {
@@ -106,54 +110,45 @@ export const usePasswordRecovery = (API) => {
   };
 
   const handleVerify = async (data) => {
-    const code = [0, 1, 2, 3, 4].map((i) => data[`code${i}`] || "").join("");
+    const code = [0,1,2,3,4].map(i => data[`code${i}`] || "").join("");
     if (!/^\d{5}$/.test(code)) {
       setMessage("El código debe tener 5 dígitos");
       return;
     }
     const success = await verifyCode({ code });
-    if (success) {
-      setStep(3);
-      reset();
-    }
+    if (success) setStep(3);
   };
 
   const handleUpdate = async (data) => {
-    const success = await updatePassword({ newPassword: data.newPassword });
-    if (success) {
-      setStep(4);
-      reset();
+    if (data.newPassword !== data.confirmPassword) {
+      setMessage("Las contraseñas no coinciden");
+      return;
     }
+    const success = await updatePassword({ newPassword: data.newPassword });
+    if (success) setStep(4);
   };
 
   const handleResendCode = async () => {
-    if (!userEmail) return;
-    setLoading((prev) => ({ ...prev, resend: true }));
+    setLoading(prev => ({ ...prev, resend: true }));
     await requestCode({ email: userEmail });
-    setLoading((prev) => ({ ...prev, resend: false }));
+    setLoading(prev => ({ ...prev, resend: false }));
   };
 
-  const handleGoBack = () => {
-    setStep(1);
-    reset();
-  };
+  const handleGoBack = () => setStep(1);
 
   return {
     step,
     userEmail,
-    loading,
-    message,
-    register,
+    control,
     handleSubmit,
-    reset,
     setValue,
-    getValues,
     watch,
-    formState,
     handleRequest,
     handleVerify,
     handleUpdate,
     handleResendCode,
     handleGoBack,
+    loading,
+    message,
   };
 };

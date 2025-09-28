@@ -87,22 +87,10 @@ export default function LoginSelectorUI({ goToPhoneLogin, goToUserLogin }) {
 
         <View style={styles.formContainer}>
           <Text style={styles.title}>Bienvenido</Text>
-          <Text style={styles.subtitle}>Elige cómo deseas iniciar sesión</Text>
+          <Text style={styles.subtitle}>Rose candle</Text>
 
           {/* Botón de login con teléfono */}
-          <TouchableOpacity
-            disabled={true} // deshabilitado temporalmente para pruebas
-            style={styles.button}
-            onPress={() => {
-              setHoveredButton("phone");
-              goToPhoneLogin(); // navegación a PhoneLogin
-            }}
-          >
-            <View style={styles.iconButton}>
-              <MaterialIcons name="phone" size={24} color="#fff" style={{ marginRight: 10 }} />
-              <Text style={styles.buttonText}>Iniciar con Teléfono</Text>
-            </View>
-          </TouchableOpacity>
+         
 
           {/* Botón de login con usuario */}
           <TouchableOpacity
