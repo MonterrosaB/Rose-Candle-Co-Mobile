@@ -23,7 +23,8 @@ import { MaterialIcons } from "@expo/vector-icons" // Iconos
 const { width, height } = Dimensions.get("window")
 
 // Endpoints de la API
-const ApiAuth = "https://rose-candle-co.onrender.com/api/auth/verify"
+const ApiAuth = "https://rose-candle-co.onrender.com/api/auth/verifyEmployee";
+
 const ApiEmployees = "https://rose-candle-co.onrender.com/api/employees"
 
 // Animación de flotación para las rosas

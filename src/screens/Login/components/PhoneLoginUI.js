@@ -21,7 +21,7 @@ export default function PhoneLoginUI({ phone, setPhone, handleContinue }) {
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>Iniciar Sesión</Text>
+        <Text style={styles.title}>Iniciar ddSesión</Text>
         <Text style={styles.label}>Número de teléfono</Text>
         <TextInput
           style={styles.input}

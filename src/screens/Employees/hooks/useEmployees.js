@@ -3,29 +3,59 @@ import { Alert } from "react-native";
 
 // Hook personalizado para manejar la lógica de empleados
 export default function useEmployees() {
-  const [employees, setEmployees] = useState([]); // Estado para la lista de empleados
+  const [employees, setEmployees] = useState([]); // Lista de empleados
   const [loading, setLoading] = useState(false); // Estado de carga
 
-  // Función para obtener la lista de empleados desde la API
+  // Obtener lista de empleados desde la API
   const fetchEmployees = useCallback(async () => {
     try {
-      setLoading(true); // Activar indicador de carga
-      const response = await fetch("https://rose-candle-co.onrender.com/api/employees"); // Llamada a la API
-      if (!response.ok) throw new Error("Error al cargar empleados"); // Manejo de error HTTP
-      const data = await response.json(); // Parsear JSON
-      setEmployees(data); // Guardar datos en estado
+      setLoading(true);
+      const response = await fetch("https://rose-candle-co.onrender.com/api/employees");
+      if (!response.ok) throw new Error("Error al cargar empleados");
+      const data = await response.json();
+      setEmployees(data);
     } catch (error) {
-      Alert.alert("Error", "No se pudo cargar la lista de empleados"); // Mostrar alerta en caso de fallo
+      Alert.alert("Error", "No se pudo cargar la lista de empleados");
     } finally {
-      setLoading(false); // Desactivar indicador de carga
+      setLoading(false);
     }
   }, []);
 
-  // Ejecutar la carga inicial al montar el hook
+  // Eliminar empleado por ID
+  const onDelete = async (id) => {
+    try {
+      const response = await fetch(`https://rose-candle-co.onrender.com/api/employees/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Error al eliminar empleado");
+      // Actualizar la lista local eliminando el empleado
+      setEmployees((prev) => prev.filter((emp) => emp._id !== id));
+    } catch (error) {
+      Alert.alert("Error", "No se pudo eliminar el empleado");
+    }
+  };
+
+  // Actualizar o agregar empleado en la lista en vivo
+  const updateEmployeeList = (employee) => {
+    setEmployees((prev) => {
+      const index = prev.findIndex((e) => e._id === employee._id);
+      if (index >= 0) {
+        // Actualizar empleado existente
+        const newList = [...prev];
+        newList[index] = employee;
+        return newList;
+      } else {
+        // Agregar nuevo empleado al inicio
+        return [employee, ...prev];
+      }
+    });
+  };
+
+  // Ejecutar la carga inicial
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  // Retornar datos, estado de carga y función de refresco
-  return { employees, loading, refresh: fetchEmployees };
+  // Retornar datos y funciones
+  return { employees, loading, refresh: fetchEmployees, onDelete, updateEmployeeList };
 }

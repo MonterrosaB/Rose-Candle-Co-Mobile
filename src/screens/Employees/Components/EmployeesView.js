@@ -1,12 +1,10 @@
 import React from "react";
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-// Componente para mostrar la lista de empleados
 export default function EmployeesView({ employees, loading, refresh, onDelete }) {
-  const navigation = useNavigation(); // Para navegar a otras pantallas si es necesario
+  const navigation = useNavigation();
 
-  // Mostrar indicador de carga mientras se obtienen los empleados
   if (loading) {
     return (
       <View style={styles.center}>
@@ -18,25 +16,23 @@ export default function EmployeesView({ employees, loading, refresh, onDelete })
 
   return (
     <View style={styles.container}>
-      {/* Cabecera con título y botón añadir (deshabilitado actualmente) */}
+      {/* Cabecera con botón de agregar */}
       <View style={styles.header}>
         <Text style={styles.title}>Empleados</Text>
         <TouchableOpacity
-          style={[styles.addButton, { opacity: 0.5 }]} // Botón deshabilitado visualmente
-          disabled={true} 
-          onPress={() => {}} 
+          style={styles.addButton}
+          onPress={() => navigation.navigate("EmployeesDetail")} // agregar nuevo empleado
         >
           <Text style={styles.addButtonText}>Añadir</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Lista de empleados */}
       <FlatList
         contentContainerStyle={{ paddingBottom: 30 }}
         data={employees}
-        keyExtractor={(item) => item.id?.toString() ?? Math.random().toString()} // Clave única
-        onRefresh={refresh} // Permite actualizar la lista
-        refreshing={loading} // Indicador de pull-to-refresh
+        keyExtractor={(item) => item?._id ?? Math.random().toString()}
+        onRefresh={refresh}
+        refreshing={loading}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View>
@@ -44,20 +40,30 @@ export default function EmployeesView({ employees, loading, refresh, onDelete })
               <Text style={styles.role}>{item.role}</Text>
             </View>
 
-            {/* Botones de acción (actualmente deshabilitados) */}
             <View style={styles.actions}>
+              {/* Botón editar */}
               <TouchableOpacity
-                style={[styles.editButton, { opacity: 0.5 }]}
-                disabled={true}
-                onPress={() => {}}
+                style={styles.editButton}
+                onPress={() =>
+                  navigation.navigate("EmployeesDetail", { employee: item }) // pasar empleado a editar
+                }
               >
                 <Text style={styles.editText}>Editar</Text>
               </TouchableOpacity>
 
+              {/* Botón eliminar */}
               <TouchableOpacity
-                style={[styles.deleteButton, { opacity: 0.5 }]}
-                disabled={true}
-                onPress={() => {}}
+                style={styles.deleteButton}
+                onPress={() =>
+                  Alert.alert(
+                    "Confirmar eliminación",
+                    `¿Estás seguro de eliminar a ${item.name}?`,
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { text: "Eliminar", style: "destructive", onPress: () => onDelete(item._id) }
+                    ]
+                  )
+                }
               >
                 <Text style={styles.deleteText}>Eliminar</Text>
               </TouchableOpacity>
@@ -78,7 +84,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 60, // Para dejar espacio en la parte superior
+    paddingTop: 60,
     backgroundColor: "#fff"
   },
   header: {

@@ -110,11 +110,12 @@ function EmployeesStack() {
       {/* Pantalla principal del módulo Employees */}
       <Stack.Screen name="EmployeesHome" component={Employees} />
 
-      {/* Detalle de Employee */}
+      {/* Detalle/Edición de Employee */}
       <Stack.Screen name="EmployeesDetail" component={EmployeesDetail} />
     </Stack.Navigator>
   );
 }
+
 
 function LoginStack() {
   return (

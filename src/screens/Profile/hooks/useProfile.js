@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form"; // Hook para manejar formularios
 import Toast from "react-native-toast-message"; // Para mostrar mensajes de éxito o error
 
 // Endpoints de la API
-const ApiAuth = "https://rose-candle-co.onrender.com/api/auth/verify";
+const ApiAuth = "https://rose-candle-co.onrender.com/api/auth/verifyEmployee";
+
 const ApiEmployees = "https://rose-candle-co.onrender.com/api/employees";
 
 // Hook personalizado para manejar el perfil de usuario
