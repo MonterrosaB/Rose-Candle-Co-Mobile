@@ -147,9 +147,14 @@ const UserLoginScreen = ({ navigation }) => {
           </View>
 
           {/* Olvidé mi contraseña */}
-          <TouchableOpacity style={styles.forgotButton} disabled={loading}>
-            <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
-          </TouchableOpacity>
+          <TouchableOpacity
+  style={styles.forgotButton}
+  disabled={loading}
+  onPress={() => navigation.navigate("RecoveryPassword")} 
+>
+  <Text style={styles.forgotText}>Olvidé mi contraseña</Text>
+</TouchableOpacity>
+
 
           {/* Botón de login */}
           <TouchableOpacity

@@ -1,133 +1,83 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form"; // Hook para manejar formularios
-import Toast from "react-native-toast-message"; // Para mostrar mensajes de éxito o error
+import { useState, useEffect } from "react";
+import Toast from "react-native-toast-message";
 
-// Endpoints de la API
 const ApiAuth = "https://rose-candle-co.onrender.com/api/auth/verifyEmployee";
-
 const ApiEmployees = "https://rose-candle-co.onrender.com/api/employees";
 
-// Hook personalizado para manejar el perfil de usuario
 export const useProfile = () => {
-  // Inicialización del formulario con react-hook-form
-  const {
-    register,      // Registrar campos del formulario
-    handleSubmit,  // Función para manejar el submit
-    reset,         // Resetear formulario
-    setValue,      // Actualizar valores de campos
-    getValues,     // Obtener valores actuales de campos
-    formState: { isSubmitting }, // Estado de envío del formulario
-  } = useForm({
-    defaultValues: { // Valores por defecto del formulario
-      id: "",
-      name: "",
-      surnames: "",
-      phone: "",
-      email: "",
-      dui: "",
-      user: "",
-      password: "",
-    },
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    surnames: "",
+    phone: "",
+    email: "",
+    dui: "",
+    user: "",
+    password: "**********",
   });
+  const [loading, setLoading] = useState(false);
 
-  // Registramos los campos para react-hook-form cuando el hook se monta
-  useEffect(() => {
-    register("id");
-    register("name");
-    register("surnames");
-    register("phone");
-    register("email");
-    register("dui");
-    register("user");
-    register("password");
-  }, [register]);
-
-  // Función para obtener los datos del perfil desde la API
   const getProfile = async () => {
     try {
-      console.log("Llamando a /verify para obtener perfil");
+      setLoading(true);
       const res = await fetch(ApiAuth, { credentials: "include" });
-      console.log("fetch /verify status:", res.status);
-
-      if (!res.ok) throw new Error("Error al verificar el usuario");
+      if (!res.ok) throw new Error("Error al verificar usuario");
 
       const data = await res.json();
-      console.log("data recibida de /verify:", data);
-
-      // Obtenemos datos completos del empleado usando su id
       const empRes = await fetch(`${ApiEmployees}/${data.id}`);
-      if (!empRes.ok) throw new Error("Error al cargar perfil completo");
+      if (!empRes.ok) throw new Error("Error al cargar empleado");
       const empData = await empRes.json();
-      console.log("Empleado completo:", empData);
 
-      // Actualizamos los valores del formulario con los datos recibidos
-      setValue("id", empData._id || empData.id || "");
-      setValue("name", empData.name || "");
-      setValue("surnames", empData.surnames || "");
-      setValue("phone", empData.phone || "");
-      setValue("email", empData.email || "");
-      setValue("dui", empData.dui || "");
-      setValue("user", empData.user || "");
-      setValue("password", "**********"); // Ocultamos la contraseña
-    } catch (error) {
-      console.error("Error getProfile:", error);
+      setFormData({
+        id: empData._id || empData.id,
+        name: empData.name || "",
+        surnames: empData.surnames || "",
+        phone: empData.phone || "",
+        email: empData.email || "",
+        dui: empData.dui || "",
+        user: empData.user || "",
+        password: "**********",
+      });
+    } catch (err) {
+      console.error(err);
       Toast.show({ type: "error", text1: "No se pudo cargar el perfil" });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Función para actualizar el perfil del usuario
-  const updateProfile = async (data) => {
+  const updateProfile = async () => {
     try {
-      const sendData = { ...data };
-      if (sendData.password === "**********") delete sendData.password; // No enviamos la contraseña si no cambió
+      setLoading(true);
+      const sendData = { ...formData };
+      if (sendData.password === "**********") delete sendData.password;
 
-      const userId = getValues("id"); // Obtenemos el id del formulario
-      console.log("Actualizando perfil con id:", userId);
-      console.log("Datos enviados:", sendData);
-
-      const res = await fetch(`${ApiEmployees}/${userId}`, {
-        method: "PUT", // Método PUT para actualizar
+      const res = await fetch(`${ApiEmployees}/${formData.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sendData),
       });
-
-      console.log("fetch PUT status:", res.status);
-
       if (!res.ok) throw new Error("Error al actualizar perfil");
-      const result = await res.json();
-      console.log("Perfil actualizado:", result);
 
-      // Mostramos mensaje de éxito
+      const result = await res.json();
       Toast.show({ type: "success", text1: "Perfil actualizado correctamente" });
 
-      // Actualizamos el formulario con los datos actualizados
-      setValue("id", result._id || result.id || "");
-      setValue("name", result.name || "");
-      setValue("surnames", result.surnames || "");
-      setValue("phone", result.phone || "");
-      setValue("email", result.email || "");
-      setValue("dui", result.dui || "");
-      setValue("user", result.user || "");
-      setValue("password", "**********"); // Ocultamos la contraseña
-    } catch (error) {
-      console.error("Error updateProfile:", error);
+      setFormData({
+        ...formData,
+        ...result,
+        password: "**********",
+      });
+    } catch (err) {
+      console.error(err);
       Toast.show({ type: "error", text1: "Error al guardar cambios" });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Cargar el perfil al montar el hook
   useEffect(() => {
     getProfile();
   }, []);
 
-  // Retornamos todas las funciones y valores del hook para usar en la UI
-  return {
-    register,
-    handleSubmit,
-    updateProfile,
-    isSubmitting,
-    reset,
-    setValue,
-    getValues,
-  };
+  return { formData, setFormData, loading, getProfile, updateProfile };
 };

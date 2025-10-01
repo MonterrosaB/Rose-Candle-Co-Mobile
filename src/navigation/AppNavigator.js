@@ -58,6 +58,9 @@ import SplashScreen from "../screens/Splash/SplashScreen.js";
 
 import WelcomeScreen from "../screens/WelcomeScreen/WelcomeScreen.js";
 
+import RecoveryPassword from "../screens/RecoveryPassword/RecoveryPassword.js"; 
+
+
 // Icons
 import { Feather } from "@expo/vector-icons";
 import { Octicons } from "@expo/vector-icons";
@@ -136,6 +139,8 @@ function LoginStack() {
         name="UserLogin" 
         component={UserLoginScreen} 
       />
+            <Stack.Screen name="RecoveryPassword" component={RecoveryPassword} />
+
     </Stack.Navigator>
   );
 }

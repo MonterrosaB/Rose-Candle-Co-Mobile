@@ -1,6 +1,6 @@
+// ProductDetailUI.jsx
 import React from "react";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function ProductDetailUI({
   categories = [],
@@ -27,18 +28,21 @@ export function ProductDetailUI({
   removeArrayItem,
   handleSave,
   goBack,
+  isNew = false,
+  saving = false,
+  isFormValid = false,
 }) {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={['top','bottom']}>
       <View style={[styles.header, { paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }]}>
         <TouchableOpacity onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Products</Text>
-        <View style={{ width: 24 }} /> 
+        <Text style={styles.headerTitle}>{isNew ? "Crear Producto" : "Editar Producto"}</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <TouchableOpacity onPress={pickImage}>
           <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
           <Text style={styles.touchText}>Tocar para cambiar imagen</Text>
@@ -62,16 +66,17 @@ export function ProductDetailUI({
         <View style={styles.switchRow}>
           <Text style={styles.label}>Disponible</Text>
           <Switch
-            value={formData.availability}
+            value={!!formData.availability}
             onValueChange={(value) => updateField("availability", value)}
           />
         </View>
 
         <Text style={styles.label}>Categoría</Text>
         <Picker
-          selectedValue={formData.idProductCategory}
+          selectedValue={typeof formData.idProductCategory === "object" ? formData.idProductCategory._id : formData.idProductCategory}
           onValueChange={(val) => updateField("idProductCategory", val)}
         >
+          <Picker.Item label="-- Seleccionar categoría --" value="" />
           {categories.map((cat) => (
             <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
           ))}
@@ -79,16 +84,17 @@ export function ProductDetailUI({
 
         <Text style={styles.label}>Colección</Text>
         <Picker
-          selectedValue={formData.idCollection}
+          selectedValue={typeof formData.idCollection === "object" ? formData.idCollection._id : formData.idCollection}
           onValueChange={(val) => updateField("idCollection", val)}
         >
+          <Picker.Item label="-- Seleccionar colección --" value="" />
           {collections.map((col) => (
             <Picker.Item key={col._id} label={col.name} value={col._id} />
           ))}
         </Picker>
 
         <Text style={styles.section}>Variantes</Text>
-        {formData.variant.map((v, i) => (
+        {Array.isArray(formData.variant) && formData.variant.map((v, i) => (
           <View key={i} style={styles.arrayItem}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
@@ -98,12 +104,13 @@ export function ProductDetailUI({
             />
             <TextInput
               style={[styles.input, { flex: 1 }]}
-              value={String(v.variantPrice || 0)}
+              value={String(v.variantPrice ?? "")}
               placeholder="Precio"
               keyboardType="numeric"
-              onChangeText={(text) =>
-                updateArrayItem("variant", i, "variantPrice", Number(text) || 0)
-              }
+              onChangeText={(text) => {
+                const parsed = text === "" ? "" : Number(text);
+                updateArrayItem("variant", i, "variantPrice", parsed);
+              }}
             />
             <TouchableOpacity onPress={() => removeArrayItem("variant", i)}>
               <Text style={styles.deleteBtn}>X</Text>
@@ -112,28 +119,29 @@ export function ProductDetailUI({
         ))}
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => addArrayItem("variant", { variant: "", variantPrice: 0 })}
+          onPress={() => addArrayItem("variant", { variant: "", variantPrice: 0, components: [] })}
         >
           <Text style={styles.addText}>+ Añadir Variante</Text>
         </TouchableOpacity>
 
         <Text style={styles.section}>Componentes</Text>
-        {formData.components.map((c, i) => (
+        {Array.isArray(formData.components) && formData.components.map((c, i) => (
           <View key={i} style={styles.arrayItem}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
-              value={c.idComponent}
+              value={typeof c.idComponent === "object" ? c.idComponent._id : c.idComponent}
               placeholder="ID Componente"
               onChangeText={(text) => updateArrayItem("components", i, "idComponent", text)}
             />
             <TextInput
               style={[styles.input, { flex: 1 }]}
-              value={String(c.amount || 0)}
+              value={String(c.amount ?? "")}
               placeholder="Cantidad"
               keyboardType="numeric"
-              onChangeText={(text) =>
-                updateArrayItem("components", i, "amount", Number(text) || 0)
-              }
+              onChangeText={(text) => {
+                const parsed = text === "" ? "" : Number(text);
+                updateArrayItem("components", i, "amount", parsed);
+              }}
             />
             <TouchableOpacity onPress={() => removeArrayItem("components", i)}>
               <Text style={styles.deleteBtn}>X</Text>
@@ -147,8 +155,14 @@ export function ProductDetailUI({
           <Text style={styles.addText}>+ Añadir Componente</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveButton} disabled={true} onPress={handleSave}>
-          <Text style={styles.saveText}>Guardar Cambios</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, (!isFormValid || saving) && { opacity: 0.6 }]}
+          disabled={!isFormValid || saving}
+          onPress={handleSave}
+        >
+          <Text style={styles.saveText}>
+            {isNew ? (saving ? "Creando..." : "Crear Producto") : (saving ? "Guardando..." : "Guardar Cambios")}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
